@@ -1,0 +1,45 @@
+
+
+dataset_path: ./data
+dataset_name: ethucy
+dataset_split: eth
+
+output_path: ./output
+cuda: true
+
+sampling: 0.1
+
+##############
+
+aug: true
+lr: 1.0e-05
+epoch: 100
+batch_size: 32
+
+num_worker: 4
+patience: -1
+
+num_nbr: 6
+obs_len: 8
+pred_len: 12
+
+view_angle: 1.57
+view_range: 20.0
+social_range: 1
+
+scene: rgrid_map
+env_range: 10
+env_resol: 0.1
+patch_size: 32
+
+traj_hidden: 256
+traj_head: 4
+traj_layer: 4
+
+goal_hidden: 256
+goal_layer: 4
+goal_head: 4
+
+goal_latent: 64
+k_sample: 20
+
