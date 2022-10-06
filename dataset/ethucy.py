@@ -90,6 +90,9 @@ class ETHUCYDataset(SPUBERTDataset):
                 # self.all_trajs = self.all_trajs[:100]
                 if self.split == 'test' and self.args.viz and len(self.all_trajs) > 100:
                     break
+                if len(self.all_trajs) > 100:
+                    self.all_trajs = self.all_trajs[:100]
+                    break
         else:
             for trajs, scene_id, frames, start_frames in zip(scene_trajs, scene_ids, scene_frames, scene_start_frames):
                 homo_path = os.path.join(self.path, scene_id + '_H.txt')
@@ -118,6 +121,7 @@ class ETHUCYDataset(SPUBERTDataset):
                     break
 
                 if len(self.all_trajs) > 100:
+                    self.all_trajs = self.all_trajs[:100]
                     break
 
     def split_trajectories_by_scene(self, data, total_len):

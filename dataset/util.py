@@ -386,8 +386,7 @@ def translation_to_target(obs_trajs):
     nbr_obs_trajs = shift_trajs(obs_trajs, center)
     return obs_trajs
 
-# def move_to_target_center(trajs, obs_len=8):
-# def to_target_
+
 def transform_to_target(trajs, obs_len=8, traj_dim=2):
     ## Center
     center = -trajs[0, obs_len-1, 0:2] ## Last Observation

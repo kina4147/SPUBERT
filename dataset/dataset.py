@@ -1,12 +1,12 @@
-
-import torch
-import random
 import os
+import copy
+import torch
 import numpy as np
 from torch.utils.data import Dataset
 import tqdm
-from .viz import *
+from SPUBERT.dataset.util import *
 from SPUBERT.dataset.indicator import SpatialIndicator, IntegerIndicator
+
 
 class SPUBERTDataset(Dataset):
     def __init__(self, split, args):
@@ -126,7 +126,7 @@ class SPUBERTDataset(Dataset):
         # ax2.set_ylim([-self.args.view_range, self.args.view_range])
         # plt.show()
         ################################################
-        if self.args.aug and self.split == 'train':
+        if self.split == 'train':
             trajs = aug_random_scale(trajs)
             trajs = neighbor_filtering(trajs, num_nbr=self.args.num_nbr, obs_len=self.args.obs_len, pred_len=self.args.pred_len,
                                        view_range=self.args.view_range, view_angle=self.args.view_angle,
@@ -167,304 +167,225 @@ class SPUBERTDataset(Dataset):
         # ax3.set_ylim([-self.args.view_range, self.args.view_range])
         # plt.show()
         #################################################
-        if self.args.mode == "pretrain":
-            is_near_lbl = is_near(trajs=trajs, radius=self.args.social_range)
-            trajs[1:, self.args.obs_len:, :] = np.nan
-            tgt_traj = copy.deepcopy(trajs[0, :self.seq_len])
-            traj_mask = np.full(tgt_traj.shape, self.s_ind.false_val)
-            rand_mask = np.random.choice(self.seq_len, 3, replace=False)
-            for i, idx in enumerate(rand_mask):
-                traj_mask[idx] = self.s_ind.true_id
-                tgt_traj[idx] = self.s_ind.msk_id
-            spatial_ids = [self.s_ind.sot_id] + tgt_traj.tolist()
-            segment_ids = [1] + [1] * self.seq_len
-            temporal_ids = [self.i_ind.pad_id] + [x for x in np.arange(1, self.seq_len+1)]
-            attn_mask = [self.i_ind.true_val] + [self.i_ind.true_val] * self.seq_len
-            traj_mask = traj_mask.tolist()  # [self.s_ind.false_val] + traj_mask.tolist()
-            traj_lbl = copy.deepcopy(trajs[0, :self.seq_len]).tolist()
+        # if self.args.mode == "pretrain":
+        #     is_near_lbl = is_near(trajs=trajs, radius=self.args.social_range)
+        #     trajs[1:, self.args.obs_len:, :] = np.nan
+        #     tgt_traj = copy.deepcopy(trajs[0, :self.seq_len])
+        #     traj_mask = np.full(tgt_traj.shape, self.s_ind.false_val)
+        #     rand_mask = np.random.choice(self.seq_len, 3, replace=False)
+        #     for i, idx in enumerate(rand_mask):
+        #         traj_mask[idx] = self.s_ind.true_id
+        #         tgt_traj[idx] = self.s_ind.msk_id
+        #     spatial_ids = [self.s_ind.sot_id] + tgt_traj.tolist()
+        #     segment_ids = [1] + [1] * self.seq_len
+        #     temporal_ids = [self.i_ind.pad_id] + [x for x in np.arange(1, self.seq_len+1)]
+        #     attn_mask = [self.i_ind.true_val] + [self.i_ind.true_val] * self.seq_len
+        #     traj_mask = traj_mask.tolist()  # [self.s_ind.false_val] + traj_mask.tolist()
+        #     traj_lbl = copy.deepcopy(trajs[0, :self.seq_len]).tolist()
+        #
+        #     nbr_obs_trajs = copy.deepcopy(trajs[1:, :self.args.obs_len, :])
+        #     is_near_lbl = is_near_lbl[1:]
+        #     near_lbl = []
+        #     for nbr_idx, nbr_traj in enumerate(nbr_obs_trajs):
+        #         nbr_traj_lbl = copy.deepcopy(nbr_traj)
+        #         nbr_nan_idx = np.isnan(nbr_traj[:, 0])
+        #         nbr_traj[nbr_nan_idx] = self.s_ind.pad_id
+        #         nbr_traj_lbl[nbr_nan_idx] = self.s_ind.pad_id
+        #         nbr_attn_mask = np.ones(len(nbr_traj))
+        #         nbr_attn_mask[nbr_nan_idx] = self.i_ind.false_val
+        #         nbr_traj_mask = np.full(nbr_traj.shape, self.s_ind.false_val)  # true value
+        #
+        #         pos_idx = np.nonzero(~nbr_nan_idx)[0]
+        #         if len(pos_idx) >= 4:
+        #             num_mask = 1  # int(len(inbound_pos) * 0.15)
+        #             rand_mask = np.random.choice(pos_idx, num_mask, replace=False)
+        #             nbr_traj[rand_mask] = self.s_ind.msk_id
+        #             nbr_traj_mask[rand_mask] = self.s_ind.true_id
+        #
+        #         spatial_ids += [self.s_ind.sep_id] + nbr_traj.tolist()
+        #         segment_ids += [nbr_idx+2] + [self.i_ind.pad_id if nan else nbr_idx+2 for nan in nbr_nan_idx]
+        #         temporal_ids += [self.i_ind.pad_id] + [self.i_ind.pad_id if nan else x for x, nan in zip(range(1, self.args.obs_len+1), nbr_nan_idx)]
+        #         attn_mask += [self.i_ind.true_val] + nbr_attn_mask.tolist()
+        #         traj_lbl += nbr_traj_lbl.tolist()
+        #         traj_mask += nbr_traj_mask.tolist()
+        #         near_lbl += [self.i_ind.near_lbl] if is_near_lbl[nbr_idx] else [self.i_ind.far_lbl]
+        #     # collate
+        #     ext_len = self.seq_input_len - len(spatial_ids)
+        #     spatial_ids_padding = [self.s_ind.pad_id] * ext_len # [self.s_ind.pad_id for _ in range(ext_len)]
+        #     spatial_ids.extend(spatial_ids_padding)
+        #     integer_ids_padding = [self.i_ind.pad_id] * ext_len # [self.i_ind.pad_id for _ in range(ext_len)]
+        #     segment_ids.extend(integer_ids_padding), temporal_ids.extend(integer_ids_padding), attn_mask.extend(integer_ids_padding)
+        #
+        #     near_lbl_ext_len = self.args.num_nbr - len(near_lbl)
+        #     near_padding = [self.i_ind.none_lbl] * near_lbl_ext_len
+        #     near_lbl.extend(near_padding)
+        #     traj_lbl += [self.s_ind.pad_id] * near_lbl_ext_len * self.args.obs_len
+        #     traj_mask += [self.s_ind.false_id] * near_lbl_ext_len * self.args.obs_len
+        #     if self.args.scene:
+        #         if tgt_env.width % self.args.patch_size != 0: # add padding
+        #             pad_size = self.args.patch_size - (tgt_env.width % self.args.patch_size) // 2
+        #             tgt_env = expand_map_with_pad(tgt_env, 0, pad_size)
+        #             # if 'ethucy' in self.args.dataset_name:
+        #             #     tgt_env, attn_mask = expand_map_with_pad(tgt_env, 0, pad_size)
+        #             # elif 'sdd' in self.args.dataset_name:
+        #             #     tgt_env, attn_mask = expand_map_with_pad(tgt_env, 0, pad_size)
+        #             # else:
+        #             #     print("DATASET is not defined.")
+        #         if self.args.binary_scene is True:
+        #             if "ethucy" in self.args.dataset_name:
+        #                 binary = 1
+        #             elif "sdd" in self.args.dataset_name:
+        #                 binary = 2
+        #             else:
+        #                 assert True
+        #         else:
+        #             binary = None
+        #         env_spatial_ids, env_attn_mask = extract_patch_from_map(tgt_env, self.args.patch_size, binary=binary)
+        #         env_segment_ids = np.arange(start=self.args.num_nbr+1, stop=self.args.num_nbr+len(env_spatial_ids)+1)
+        #         env_temporal_ids = np.ones(len(env_spatial_ids)) * self.args.obs_len
+        #         # env_attn_mask = env_attn_mask # np.ones(len(env_spatial_ids))
+        #         envs_params = [tgt_env.min_x, tgt_env.min_y, tgt_env.width, tgt_env.height, tgt_env.resolution, 2.0]
+        #         output = {'spatial_ids': torch.tensor(spatial_ids, dtype=torch.float),
+        #                   'segment_ids': torch.tensor(segment_ids, dtype=torch.long),
+        #                   'temporal_ids': torch.tensor(temporal_ids, dtype=torch.long),
+        #                   'attn_mask': torch.tensor(attn_mask, dtype=torch.float),
+        #                   'env_spatial_ids': torch.tensor(np.array(env_spatial_ids), dtype=torch.float),
+        #                   'env_segment_ids': torch.tensor(env_segment_ids, dtype=torch.long),
+        #                   'env_temporal_ids': torch.tensor(env_temporal_ids, dtype=torch.long),
+        #                   'env_attn_mask': torch.tensor(env_attn_mask, dtype=torch.float),
+        #                   'envs': torch.tensor(tgt_env.grid_map, dtype=torch.float),
+        #                   'envs_params': torch.tensor(envs_params, dtype=torch.float),
+        #                   'traj_mask': torch.tensor(traj_mask, dtype=torch.float),
+        #                   'traj_lbl': torch.tensor(traj_lbl, dtype=torch.float),
+        #                   'near_lbl': torch.tensor(near_lbl, dtype=torch.long),
+        #                   'scales': torch.tensor(scale, dtype=torch.float)
+        #                   }
+        #         return output
+        #     else:
+        #         output = {'spatial_ids': torch.tensor(spatial_ids, dtype=torch.float),
+        #                   'segment_ids': torch.tensor(segment_ids, dtype=torch.long),
+        #                   'temporal_ids': torch.tensor(temporal_ids, dtype=torch.long),
+        #                   'attn_mask': torch.tensor(attn_mask, dtype=torch.float),
+        #                   'traj_mask': torch.tensor(traj_mask, dtype=torch.float),
+        #                   'traj_lbl': torch.tensor(traj_lbl, dtype=torch.float),
+        #                   'near_lbl': torch.tensor(near_lbl, dtype=torch.long),
+        #                   'scales': torch.tensor(scale, dtype=torch.float)
+        #                   }
+        #         return output
+        #
+        #
+        # else:
+        trajs[1:, self.args.obs_len:, :] = np.nan
+        tgt_pred_traj = copy.deepcopy(trajs[0, self.args.obs_len:])
+        tgt_obs_traj = copy.deepcopy(trajs[0, :self.args.obs_len])
+        goal_lbl = tgt_pred_traj[-1, :]
+        traj_lbl = tgt_pred_traj
+        nan_idx = np.isnan(tgt_obs_traj[:, 0])
+        tgt_obs_traj[nan_idx] = self.s_ind.pad_id
+        mgp_spatial_ids = [self.s_ind.sot_id] + tgt_obs_traj[:self.args.obs_len].tolist() + [self.s_ind.pad_id] * (
+                    self.args.pred_len - 1) + [self.s_ind.msk_id]
+        mgp_segment_ids = [1] + [self.i_ind.pad_id if nan else 1 for nan in nan_idx[:self.args.obs_len]] + [
+            self.i_ind.pad_id] * (self.args.pred_len - 1) + [1]
+        mgp_temporal_ids = [self.i_ind.pad_id] + [self.i_ind.pad_id if nan else x for x, nan in
+                                                  zip(range(1, self.args.obs_len + 1),
+                                                      nan_idx[:self.args.obs_len])] + [self.i_ind.pad_id] * (
+                                       self.args.pred_len - 1) + [self.seq_len]
+        mgp_attn_mask = [self.i_ind.true_val] + [self.i_ind.false_val if nan else self.i_ind.true_val for nan in
+                                                 nan_idx[:self.args.obs_len]] + [self.i_ind.false_val] * (
+                                    self.args.pred_len - 1) + [self.i_ind.true_val]
 
-            nbr_obs_trajs = copy.deepcopy(trajs[1:, :self.args.obs_len, :])
-            is_near_lbl = is_near_lbl[1:]
-            near_lbl = []
-            for nbr_idx, nbr_traj in enumerate(nbr_obs_trajs):
-                nbr_traj_lbl = copy.deepcopy(nbr_traj)
-                nbr_nan_idx = np.isnan(nbr_traj[:, 0])
-                nbr_traj[nbr_nan_idx] = self.s_ind.pad_id
-                nbr_traj_lbl[nbr_nan_idx] = self.s_ind.pad_id
-                nbr_attn_mask = np.ones(len(nbr_traj))
-                nbr_attn_mask[nbr_nan_idx] = self.i_ind.false_val
-                nbr_traj_mask = np.full(nbr_traj.shape, self.s_ind.false_val)  # true value
+        tgp_spatial_ids = [self.s_ind.sot_id] + tgt_obs_traj[:self.args.obs_len].tolist() + [self.s_ind.msk_id] * (self.args.pred_len - 1) + [goal_lbl.tolist()]
+        tgp_segment_ids = [1] + [self.i_ind.pad_id if nan else 1 for nan in nan_idx[:self.args.obs_len]] + [1] * (self.args.pred_len)
+        tgp_temporal_ids = [self.i_ind.pad_id] + [self.i_ind.pad_id if nan else x for x, nan in zip(range(1, self.args.obs_len+1), nan_idx[:self.args.obs_len])] + [x for x in np.arange(self.args.obs_len+1, self.seq_len+1)]
+        tgp_attn_mask = [self.i_ind.true_val] + [self.i_ind.false_val if nan else self.i_ind.true_val for nan in nan_idx[:self.args.obs_len]] + [self.i_ind.true_val] * (self.args.pred_len)
 
-                pos_idx = np.nonzero(~nbr_nan_idx)[0]
-                if len(pos_idx) >= 4:
-                    num_mask = 1  # int(len(inbound_pos) * 0.15)
-                    rand_mask = np.random.choice(pos_idx, num_mask, replace=False)
-                    nbr_traj[rand_mask] = self.s_ind.msk_id
-                    nbr_traj_mask[rand_mask] = self.s_ind.true_id
+        nbr_obs_trajs = copy.deepcopy(trajs[1:, :self.args.obs_len, :])
+        spatial_ids = []
+        segment_ids = []
+        temporal_ids = []
+        attn_mask = []
+        for nbr_idx, nbr_traj in enumerate(nbr_obs_trajs):
+            nbr_nan_idx = np.isnan(nbr_traj[:, 0])
+            nbr_traj[nbr_nan_idx] = self.s_ind.pad_id
+            nbr_attn_mask = np.ones(len(nbr_traj))
+            nbr_attn_mask[nbr_nan_idx] = self.i_ind.false_val
+            spatial_ids += [self.s_ind.sep_id] + nbr_traj.tolist()
+            segment_ids += [nbr_idx+2] + [self.i_ind.pad_id if nan else nbr_idx+2 for nan in nbr_nan_idx]
+            temporal_ids += [self.i_ind.pad_id] + [self.i_ind.pad_id if nan else x for x, nan in zip(range(1, self.args.obs_len+1), nbr_nan_idx)]
+            attn_mask += [self.i_ind.true_val] + nbr_attn_mask.tolist()
+        # collate
+        ext_len = self.seq_input_len - len(spatial_ids) - len(mgp_spatial_ids)
+        spatial_ids_padding = [self.s_ind.pad_id] * ext_len # [self.s_ind.pad_id for _ in range(ext_len)]
+        spatial_ids.extend(spatial_ids_padding)
+        integer_ids_padding = [self.i_ind.pad_id] * ext_len # [self.i_ind.pad_id for _ in range(ext_len)]
+        segment_ids.extend(integer_ids_padding), temporal_ids.extend(integer_ids_padding), attn_mask.extend(integer_ids_padding)
+        mgp_spatial_ids += spatial_ids
+        mgp_segment_ids += segment_ids
+        mgp_temporal_ids += temporal_ids
+        mgp_attn_mask += attn_mask
+        tgp_spatial_ids += spatial_ids
+        tgp_segment_ids += segment_ids
+        tgp_temporal_ids += temporal_ids
+        tgp_attn_mask += attn_mask
+        # fig4, ax4 = plt.subplots()
+        # tgt_env.plot_grid_map_in_space(ax=ax4)
+        # for idx, traj in enumerate(trajs):
+        #     ax4.scatter(traj[:, 0], traj[:, 1])
+        # env patch (patch cell size) even number
+        # plt.show()
+        if self.args.scene:
+            if tgt_env.width % self.args.patch_size != 0: # add padding
+                pad_size = self.args.patch_size - (tgt_env.width % self.args.patch_size) // 2
+                tgt_env = expand_map_with_pad(tgt_env, 0, pad_size)
 
-                spatial_ids += [self.s_ind.sep_id] + nbr_traj.tolist()
-                segment_ids += [nbr_idx+2] + [self.i_ind.pad_id if nan else nbr_idx+2 for nan in nbr_nan_idx]
-                temporal_ids += [self.i_ind.pad_id] + [self.i_ind.pad_id if nan else x for x, nan in zip(range(1, self.args.obs_len+1), nbr_nan_idx)]
-                attn_mask += [self.i_ind.true_val] + nbr_attn_mask.tolist()
-                traj_lbl += nbr_traj_lbl.tolist()
-                traj_mask += nbr_traj_mask.tolist()
-                near_lbl += [self.i_ind.near_lbl] if is_near_lbl[nbr_idx] else [self.i_ind.far_lbl]
-            # collate
-            ext_len = self.seq_input_len - len(spatial_ids)
-            spatial_ids_padding = [self.s_ind.pad_id] * ext_len # [self.s_ind.pad_id for _ in range(ext_len)]
-            spatial_ids.extend(spatial_ids_padding)
-            integer_ids_padding = [self.i_ind.pad_id] * ext_len # [self.i_ind.pad_id for _ in range(ext_len)]
-            segment_ids.extend(integer_ids_padding), temporal_ids.extend(integer_ids_padding), attn_mask.extend(integer_ids_padding)
-
-            near_lbl_ext_len = self.args.num_nbr - len(near_lbl)
-            near_padding = [self.i_ind.none_lbl] * near_lbl_ext_len
-            near_lbl.extend(near_padding)
-            traj_lbl += [self.s_ind.pad_id] * near_lbl_ext_len * self.args.obs_len
-            traj_mask += [self.s_ind.false_id] * near_lbl_ext_len * self.args.obs_len
-            if self.args.scene:
-                if tgt_env.width % self.args.patch_size != 0: # add padding
-                    pad_size = self.args.patch_size - (tgt_env.width % self.args.patch_size) // 2
-                    tgt_env = expand_map_with_pad(tgt_env, 0, pad_size)
-                    # if 'ethucy' in self.args.dataset_name:
-                    #     tgt_env, attn_mask = expand_map_with_pad(tgt_env, 0, pad_size)
-                    # elif 'sdd' in self.args.dataset_name:
-                    #     tgt_env, attn_mask = expand_map_with_pad(tgt_env, 0, pad_size)
-                    # else:
-                    #     print("DATASET is not defined.")
-                if self.args.binary_scene is True:
-                    if "ethucy" in self.args.dataset_name:
-                        binary = 1
-                    elif "sdd" in self.args.dataset_name:
-                        binary = 2
-                    else:
-                        assert True
+            if self.args.binary_scene is True:
+                if "ethucy" in self.args.dataset_name:
+                    binary = 1
+                elif "sdd" in self.args.dataset_name:
+                    binary = 2
                 else:
-                    binary = None
-                env_spatial_ids, env_attn_mask = extract_patch_from_map(tgt_env, self.args.patch_size, binary=binary)
-                env_segment_ids = np.arange(start=self.args.num_nbr+1, stop=self.args.num_nbr+len(env_spatial_ids)+1)
-                env_temporal_ids = np.ones(len(env_spatial_ids)) * self.args.obs_len
-                # env_attn_mask = env_attn_mask # np.ones(len(env_spatial_ids))
-                envs_params = [tgt_env.min_x, tgt_env.min_y, tgt_env.width, tgt_env.height, tgt_env.resolution, 2.0]
-                output = {'spatial_ids': torch.tensor(spatial_ids, dtype=torch.float),
-                          'segment_ids': torch.tensor(segment_ids, dtype=torch.long),
-                          'temporal_ids': torch.tensor(temporal_ids, dtype=torch.long),
-                          'attn_mask': torch.tensor(attn_mask, dtype=torch.float),
-                          'env_spatial_ids': torch.tensor(np.array(env_spatial_ids), dtype=torch.float),
-                          'env_segment_ids': torch.tensor(env_segment_ids, dtype=torch.long),
-                          'env_temporal_ids': torch.tensor(env_temporal_ids, dtype=torch.long),
-                          'env_attn_mask': torch.tensor(env_attn_mask, dtype=torch.float),
-                          'envs': torch.tensor(tgt_env.grid_map, dtype=torch.float),
-                          'envs_params': torch.tensor(envs_params, dtype=torch.float),
-                          'traj_mask': torch.tensor(traj_mask, dtype=torch.float),
-                          'traj_lbl': torch.tensor(traj_lbl, dtype=torch.float),
-                          'near_lbl': torch.tensor(near_lbl, dtype=torch.long),
-                          'scales': torch.tensor(scale, dtype=torch.float)
-                          }
-                return output
+                    assert True
             else:
-                output = {'spatial_ids': torch.tensor(spatial_ids, dtype=torch.float),
-                          'segment_ids': torch.tensor(segment_ids, dtype=torch.long),
-                          'temporal_ids': torch.tensor(temporal_ids, dtype=torch.long),
-                          'attn_mask': torch.tensor(attn_mask, dtype=torch.float),
-                          'traj_mask': torch.tensor(traj_mask, dtype=torch.float),
-                          'traj_lbl': torch.tensor(traj_lbl, dtype=torch.float),
-                          'near_lbl': torch.tensor(near_lbl, dtype=torch.long),
-                          'scales': torch.tensor(scale, dtype=torch.float)
-                          }
-                return output
+                binary = None
 
+            env_spatial_ids, env_attn_mask  = extract_patch_from_map(tgt_env, self.args.patch_size, binary=binary)
+            env_segment_ids = np.arange(start=self.args.num_nbr+1, stop=self.args.num_nbr+len(env_spatial_ids)+1)
+            env_temporal_ids = np.ones(len(env_spatial_ids)) * self.args.obs_len
+            # env_attn_mask = np.ones(len(env_spatial_ids))
+            envs_params = [tgt_env.min_x, tgt_env.min_y, tgt_env.width, tgt_env.height, tgt_env.resolution, 2]
 
+            output = {'mgp_spatial_ids': torch.tensor(mgp_spatial_ids, dtype=torch.float),
+                      'mgp_segment_ids': torch.tensor(mgp_segment_ids, dtype=torch.long),
+                      'mgp_temporal_ids': torch.tensor(mgp_temporal_ids, dtype=torch.long),
+                      'mgp_attn_mask': torch.tensor(mgp_attn_mask, dtype=torch.float),
+                      'tgp_spatial_ids': torch.tensor(tgp_spatial_ids, dtype=torch.float),
+                      'tgp_segment_ids': torch.tensor(tgp_segment_ids, dtype=torch.long),
+                      'tgp_temporal_ids': torch.tensor(tgp_temporal_ids, dtype=torch.long),
+                      'tgp_attn_mask': torch.tensor(tgp_attn_mask, dtype=torch.float),
+                      'env_spatial_ids': torch.tensor(np.array(env_spatial_ids), dtype=torch.float),
+                      'env_segment_ids': torch.tensor(env_segment_ids, dtype=torch.long),
+                      'env_temporal_ids': torch.tensor(env_temporal_ids, dtype=torch.long),
+                      'env_attn_mask': torch.tensor(env_attn_mask, dtype=torch.float),
+                      'traj_lbl': torch.tensor(traj_lbl, dtype=torch.float),
+                      'goal_lbl': torch.tensor(goal_lbl, dtype=torch.float),
+                      'envs': torch.tensor(tgt_env.grid_map, dtype=torch.float),
+                      'envs_params': torch.tensor(envs_params, dtype=torch.float),
+                      'scales': torch.tensor(scale, dtype=torch.float),
+                      }
         else:
-            trajs[1:, self.args.obs_len:, :] = np.nan
-            tgt_pred_traj = copy.deepcopy(trajs[0, self.args.obs_len:])
-            tgt_obs_traj = copy.deepcopy(trajs[0, :self.args.obs_len])
-            goal_lbl = tgt_pred_traj[-1, :]
-            traj_lbl = tgt_pred_traj
+            output = {'mgp_spatial_ids': torch.tensor(mgp_spatial_ids, dtype=torch.float),
+                      'mgp_segment_ids': torch.tensor(mgp_segment_ids, dtype=torch.long),
+                      'mgp_temporal_ids': torch.tensor(mgp_temporal_ids, dtype=torch.long),
+                      'mgp_attn_mask': torch.tensor(mgp_attn_mask, dtype=torch.float),
+                      'tgp_spatial_ids': torch.tensor(tgp_spatial_ids, dtype=torch.float),
+                      'tgp_segment_ids': torch.tensor(tgp_segment_ids, dtype=torch.long),
+                      'tgp_temporal_ids': torch.tensor(tgp_temporal_ids, dtype=torch.long),
+                      'tgp_attn_mask': torch.tensor(tgp_attn_mask, dtype=torch.float),
+                      'traj_lbl': torch.tensor(traj_lbl, dtype=torch.float),
+                      'goal_lbl': torch.tensor(goal_lbl, dtype=torch.float),
+                      'scales': torch.tensor(scale, dtype=torch.float)
+                      }
 
-
-            # for target pedestrian
-            # tgt_obs_traj = copy.deepcopy(trajs[0, :self.args.obs_len])
-            # nbr_obs_trajs = copy.deepcopy(trajs[1:, :self.args.obs_len])
-            # tgt_obs_traj /= scale
-            # if self.args.mode == "pretrain":
-            #     nan_idx = np.isnan(tgt_obs_traj[:, 0])
-            #     tgt_obs_traj[nan_idx] = self.s_ind.pad_id
-            #     if self.args.train_mode == "tgp":
-            #         # NAN => PAD => ALL PAD => ALL ATTN MASK
-            #         spatial_ids = [self.s_ind.sot_id] + tgt_traj[:self.args.obs_len].tolist() + [self.s_ind.msk_id]*(self.args.pred_len-1) + [tgt_traj[self.seq_len-1].tolist()]
-            #         segment_ids = [1 for _ in range(self.seq_len + 1)]
-            #         temporal_ids = [self.i_ind.pad_id] + [x for x in range(1, self.seq_len + 1)]
-            #         attn_mask = [self.i_ind.true_val] * (self.seq_len + 1)
-            #     elif self.args.train_mode == "mgp":
-            #         spatial_ids = [self.s_ind.sot_id] + tgt_traj[:self.args.obs_len].tolist() + [self.s_ind.pad_id] * (
-            #                     self.args.pred_len - 1) + [self.s_ind.msk_id]
-            #
-            #         segment_ids = [1] + [self.i_ind.pad_id if nan else 1 for nan in nan_idx[:self.args.obs_len]] + [self.i_ind.pad_id] * (self.args.pred_len-1) + [1]
-            #         temporal_ids = [self.i_ind.pad_id] + [self.i_ind.pad_id if nan else x for x, nan in
-            #                                               zip(range(1, self.args.obs_len + 1),
-            #                                                   nan_idx[:self.args.obs_len])] + [self.i_ind.pad_id] * (
-            #                                    self.args.pred_len - 1) + [self.seq_len]
-            #         attn_mask = [self.i_ind.true_val] + [self.i_ind.false_val if nan else self.i_ind.true_val for nan in
-            #                                              nan_idx[:self.args.obs_len]] + [self.i_ind.false_val] * (
-            #                                 self.args.pred_len - 1) + [self.i_ind.true_val]
-            #     elif self.args.train_mode == "mtp":
-            #         # MTP + SIP + EIP
-            #         goal_lbl = copy.copy(tgt_traj[-1, :])
-            #         traj_lbl = copy.copy(tgt_traj[self.args.obs_len:])
-            #         # PAD : MSK : VAL = PAD (NEG): MSK (EVL): VAL (EVL) = 6 : 5 : 1
-            #         pred_ids = np.arange(self.args.obs_len, self.args.obs_len+self.args.pred_len)
-            #         np.random.shuffle(pred_ids) # Shuffle
-            #         # pads = pred_ids[:6]
-            #         # msks = pred_ids[6:11]
-            #         # vals = pred_ids[11]
-            #         tgt_traj[pred_ids[:6]] = self.s_ind.pad_id
-            #         tgt_traj[pred_ids[6:11]] = self.s_ind.msk_id
-            #         # rand_mask = np.random.choice(self.args.pred_len, 3, replace=False) + self.args.obs_len
-            #         # tgt_traj[rand_mask] = self.s_ind.msk_id
-            #         spatial_ids = [self.s_ind.sot_id] + tgt_traj.tolist()
-            #         segment_ids = [1 for _ in range(self.seq_len + 1)]
-            #         temporal_ids = [self.i_ind.pad_id] + [x for x in range(1, self.seq_len + 1)]
-            #         attn_mask = np.array([self.i_ind.true_val] * (self.seq_len + 1))
-            #         attn_mask[pred_ids[:6]+1] = self.i_ind.false_val
-            #         attn_mask = attn_mask.tolist()
-            #     else:
-            #         raise ValueError("Pretrain's train mode does not exist.")
-            #
-            # elif self.args.mode == "finetune":
-            nan_idx = np.isnan(tgt_obs_traj[:, 0])
-            tgt_obs_traj[nan_idx] = self.s_ind.pad_id
-
-            ## All Prediction Padding
-            # mgp_spatial_ids = [self.s_ind.sot_id] + tgt_obs_traj[:self.args.obs_len].tolist() + [self.s_ind.pad_id] * (
-            #     self.args.pred_len)
-            # mgp_segment_ids = [1] + [self.i_ind.pad_id if nan else 1 for nan in nan_idx[:self.args.obs_len]] + [
-            #     self.i_ind.pad_id] * (self.args.pred_len)
-            # mgp_temporal_ids = [self.i_ind.pad_id] + [self.i_ind.pad_id if nan else x for x, nan in
-            #                                           zip(range(1, self.args.obs_len + 1),
-            #                                               nan_idx[:self.args.obs_len])] + [self.i_ind.pad_id] * (
-            #                        self.args.pred_len)
-            # mgp_attn_mask = [self.i_ind.true_val] + [self.i_ind.false_val if nan else self.i_ind.true_val for nan in
-            #                                          nan_idx[:self.args.obs_len]] + [self.i_ind.false_val] * (
-            #                     self.args.pred_len)
-
-            # Last Prediction Masking
-            mgp_spatial_ids = [self.s_ind.sot_id] + tgt_obs_traj[:self.args.obs_len].tolist() + [self.s_ind.pad_id] * (
-                        self.args.pred_len - 1) + [self.s_ind.msk_id]
-            mgp_segment_ids = [1] + [self.i_ind.pad_id if nan else 1 for nan in nan_idx[:self.args.obs_len]] + [
-                self.i_ind.pad_id] * (self.args.pred_len - 1) + [1]
-            mgp_temporal_ids = [self.i_ind.pad_id] + [self.i_ind.pad_id if nan else x for x, nan in
-                                                      zip(range(1, self.args.obs_len + 1),
-                                                          nan_idx[:self.args.obs_len])] + [self.i_ind.pad_id] * (
-                                           self.args.pred_len - 1) + [self.seq_len]
-            mgp_attn_mask = [self.i_ind.true_val] + [self.i_ind.false_val if nan else self.i_ind.true_val for nan in
-                                                     nan_idx[:self.args.obs_len]] + [self.i_ind.false_val] * (
-                                        self.args.pred_len - 1) + [self.i_ind.true_val]
-
-            ## All Prediction Masking
-            # mgp_spatial_ids = [self.s_ind.sot_id] + tgt_obs_traj[:self.args.obs_len].tolist() + [self.s_ind.msk_id] * self.args.pred_len
-            # mgp_segment_ids = [1] + [self.i_ind.pad_id if nan else 1 for nan in nan_idx[:self.args.obs_len]] + [1] * self.args.pred_len
-            # mgp_temporal_ids = [self.i_ind.pad_id] + [self.i_ind.pad_id if nan else x for x, nan in
-            #                                           zip(range(1, self.args.obs_len + 1),
-            #                                               nan_idx[:self.args.obs_len])] + [x for x in np.arange(
-            #     self.args.obs_len + 1, self.seq_len + 1)]
-            # mgp_attn_mask = [self.i_ind.true_val] + [self.i_ind.false_val if nan else self.i_ind.true_val for nan in
-            #                                          nan_idx[:self.args.obs_len]] + [self.i_ind.true_val] * (
-            #                     self.args.pred_len)
-
-            tgp_spatial_ids = [self.s_ind.sot_id] + tgt_obs_traj[:self.args.obs_len].tolist() + [self.s_ind.msk_id] * (self.args.pred_len - 1) + [goal_lbl.tolist()]
-            tgp_segment_ids = [1] + [self.i_ind.pad_id if nan else 1 for nan in nan_idx[:self.args.obs_len]] + [1] * (self.args.pred_len)
-            tgp_temporal_ids = [self.i_ind.pad_id] + [self.i_ind.pad_id if nan else x for x, nan in zip(range(1, self.args.obs_len+1), nan_idx[:self.args.obs_len])] + [x for x in np.arange(self.args.obs_len+1, self.seq_len+1)]
-            tgp_attn_mask = [self.i_ind.true_val] + [self.i_ind.false_val if nan else self.i_ind.true_val for nan in nan_idx[:self.args.obs_len]] + [self.i_ind.true_val] * (self.args.pred_len)
-
-            nbr_obs_trajs = copy.deepcopy(trajs[1:, :self.args.obs_len, :])
-            # nbr_obs_trajs /= scale
-            # for neighbor pedestrian
-            spatial_ids = []
-            segment_ids = []
-            temporal_ids = []
-            attn_mask = []
-            for nbr_idx, nbr_traj in enumerate(nbr_obs_trajs):
-                nbr_nan_idx = np.isnan(nbr_traj[:, 0])
-                nbr_traj[nbr_nan_idx] = self.s_ind.pad_id
-                nbr_attn_mask = np.ones(len(nbr_traj))
-                nbr_attn_mask[nbr_nan_idx] = self.i_ind.false_val
-                spatial_ids += [self.s_ind.sep_id] + nbr_traj.tolist()
-                segment_ids += [nbr_idx+2] + [self.i_ind.pad_id if nan else nbr_idx+2 for nan in nbr_nan_idx]
-                temporal_ids += [self.i_ind.pad_id] + [self.i_ind.pad_id if nan else x for x, nan in zip(range(1, self.args.obs_len+1), nbr_nan_idx)]
-                attn_mask += [self.i_ind.true_val] + nbr_attn_mask.tolist()
-            # collate
-            ext_len = self.seq_input_len - len(spatial_ids) - len(mgp_spatial_ids)
-            spatial_ids_padding = [self.s_ind.pad_id] * ext_len # [self.s_ind.pad_id for _ in range(ext_len)]
-            spatial_ids.extend(spatial_ids_padding)
-            integer_ids_padding = [self.i_ind.pad_id] * ext_len # [self.i_ind.pad_id for _ in range(ext_len)]
-            segment_ids.extend(integer_ids_padding), temporal_ids.extend(integer_ids_padding), attn_mask.extend(integer_ids_padding)
-            mgp_spatial_ids += spatial_ids
-            mgp_segment_ids += segment_ids
-            mgp_temporal_ids += temporal_ids
-            mgp_attn_mask += attn_mask
-            tgp_spatial_ids += spatial_ids
-            tgp_segment_ids += segment_ids
-            tgp_temporal_ids += temporal_ids
-            tgp_attn_mask += attn_mask
-            # fig4, ax4 = plt.subplots()
-            # tgt_env.plot_grid_map_in_space(ax=ax4)
-            # for idx, traj in enumerate(trajs):
-            #     ax4.scatter(traj[:, 0], traj[:, 1])
-            # env patch (patch cell size) even number
-            # plt.show()
-            if self.args.scene:
-                if tgt_env.width % self.args.patch_size != 0: # add padding
-                    pad_size = self.args.patch_size - (tgt_env.width % self.args.patch_size) // 2
-                    tgt_env = expand_map_with_pad(tgt_env, 0, pad_size)
-
-                if self.args.binary_scene is True:
-                    if "ethucy" in self.args.dataset_name:
-                        binary = 1
-                    elif "sdd" in self.args.dataset_name:
-                        binary = 2
-                    else:
-                        assert True
-                else:
-                    binary = None
-
-                env_spatial_ids, env_attn_mask  = extract_patch_from_map(tgt_env, self.args.patch_size, binary=binary)
-                env_segment_ids = np.arange(start=self.args.num_nbr+1, stop=self.args.num_nbr+len(env_spatial_ids)+1)
-                env_temporal_ids = np.ones(len(env_spatial_ids)) * self.args.obs_len
-                # env_attn_mask = np.ones(len(env_spatial_ids))
-                envs_params = [tgt_env.min_x, tgt_env.min_y, tgt_env.width, tgt_env.height, tgt_env.resolution, 2]
-
-                output = {'mgp_spatial_ids': torch.tensor(mgp_spatial_ids, dtype=torch.float),
-                          'mgp_segment_ids': torch.tensor(mgp_segment_ids, dtype=torch.long),
-                          'mgp_temporal_ids': torch.tensor(mgp_temporal_ids, dtype=torch.long),
-                          'mgp_attn_mask': torch.tensor(mgp_attn_mask, dtype=torch.float),
-                          'tgp_spatial_ids': torch.tensor(tgp_spatial_ids, dtype=torch.float),
-                          'tgp_segment_ids': torch.tensor(tgp_segment_ids, dtype=torch.long),
-                          'tgp_temporal_ids': torch.tensor(tgp_temporal_ids, dtype=torch.long),
-                          'tgp_attn_mask': torch.tensor(tgp_attn_mask, dtype=torch.float),
-                          'env_spatial_ids': torch.tensor(np.array(env_spatial_ids), dtype=torch.float),
-                          'env_segment_ids': torch.tensor(env_segment_ids, dtype=torch.long),
-                          'env_temporal_ids': torch.tensor(env_temporal_ids, dtype=torch.long),
-                          'env_attn_mask': torch.tensor(env_attn_mask, dtype=torch.float),
-                          'traj_lbl': torch.tensor(traj_lbl, dtype=torch.float),
-                          'goal_lbl': torch.tensor(goal_lbl, dtype=torch.float),
-                          'envs': torch.tensor(tgt_env.grid_map, dtype=torch.float),
-                          'envs_params': torch.tensor(envs_params, dtype=torch.float),
-                          'scales': torch.tensor(scale, dtype=torch.float),
-                          }
-            else:
-                output = {'mgp_spatial_ids': torch.tensor(mgp_spatial_ids, dtype=torch.float),
-                          'mgp_segment_ids': torch.tensor(mgp_segment_ids, dtype=torch.long),
-                          'mgp_temporal_ids': torch.tensor(mgp_temporal_ids, dtype=torch.long),
-                          'mgp_attn_mask': torch.tensor(mgp_attn_mask, dtype=torch.float),
-                          'tgp_spatial_ids': torch.tensor(tgp_spatial_ids, dtype=torch.float),
-                          'tgp_segment_ids': torch.tensor(tgp_segment_ids, dtype=torch.long),
-                          'tgp_temporal_ids': torch.tensor(tgp_temporal_ids, dtype=torch.long),
-                          'tgp_attn_mask': torch.tensor(tgp_attn_mask, dtype=torch.float),
-                          'traj_lbl': torch.tensor(traj_lbl, dtype=torch.float),
-                          'goal_lbl': torch.tensor(goal_lbl, dtype=torch.float),
-                          'scales': torch.tensor(scale, dtype=torch.float)
-                          }
-
-            return output
+        return output
 
 

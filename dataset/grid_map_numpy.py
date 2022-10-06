@@ -57,36 +57,6 @@ def extract_grid_map(src_gmap, cntr_x, cntr_y, range_x, range_y, resol):
 
     return dst_gmap
 
-# def test_extract(grid_map):
-#     # pass
-#     # GridMap(100, 100, 0.5, center_x=0, center_y=50)
-#     e_gmap = extract_grid_map(grid_map, 0, 0, 50, 50, 0.5)
-#     e_gmap.flip_x()
-#     e_gmap.plot_grid_map_in_space()
-#
-#     return e_gmap
-
-# def test_cgrid_map(grid_map):
-#     d_range = 100
-#     d_resol = 1.0
-#     a_range = np.pi/2
-#     a_resol = np.pi/90
-#
-#     num_cols = int(d_range / d_resol)
-#     num_rows = int(2.0 * a_range / a_resol)
-#     num_cols = num_cols if (num_cols % 2) == 0 else num_cols+1
-#     num_rows = num_rows if (num_rows % 2) == 0 else num_rows+1
-#     cgmap = CircularGridMap(num_cols, num_rows, d_resol, a_resol, center_x=0, center_y=0, center_d=0, center_a=0)
-#     xs, ys = cgmap.get_all_xy_pos()
-#     plt.scatter(xs, ys, s=3.0, marker='.')
-#     for x, y in zip(xs, ys):
-#         val = grid_map.get_value_from_xy_pos(x, y)
-#         if not val: continue
-#         cgmap.set_value_from_xy_pos(x, y, val)
-#         # cgmap.set_value_from_xy_pos(x, y, 1.0)
-#     # cgmap.update_ray_casting()
-#     cgmap.plot_grid_map_in_space()
-
 
 class RectangularGridMap:
     """

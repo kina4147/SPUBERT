@@ -1,82 +1,17 @@
 
 import torch
-import torch.nn as nn
-from SPUBERT.model.modeling_spubert import (
-    SPUBERTEncoder,
-    SPUBERTModelBase,
-)
-
+from SPUBERT.model.modeling_spubert import SPUBERTEncoder, SPUBERTModelBase
 from typing import Optional, Tuple
 from collections import OrderedDict
 from SPUBERT.model.embedding import SPUBERTEmbeddings, SPUBERTMMEmbeddings
-from SPUBERT.model.cvae import (
-    GoalRecognitionNet, GoalPriorNet, GoalEncoder, TrajGRUEncoder, TrajMLPEncoder, TrajHiddenGRUEncoder)
-from SPUBERT.model.decoder import SpatialDecoder, GoalDecoder, SIPDecoder, MTPDecoder
-from SPUBERT.model.pooler import GoalPooler, FullTrajPooler, PastTrajPooler, FutureTrajPooler, MTPPooler, SIPPooler
+from SPUBERT.model.cvae import GoalRecognitionNet, GoalPriorNet, GoalEncoder
+from SPUBERT.model.decoder import SpatialDecoder, GoalDecoder
+from SPUBERT.model.pooler import GoalPooler, FutureTrajPooler
 from SPUBERT.model.loss import (
-    goal_collision_loss, pos_collision_loss, beta_tcvae_loss, info_vae_loss, beta_tcvae_loss_normal,
-    MaskedADELoss, ADELoss, FDELoss, MGPCVAELoss, reparametrize, BetaTCVAELoss
-    # tgp_cvae_loss, cvae_loss, mgp_cvae_loss, traj_loss, attn_traj_loss, traj_collision_loss,mgp_tgp_fde_loss,
+    goal_collision_loss, pos_collision_loss,
+    ADELoss, FDELoss, MGPCVAELoss,
 )
 from SPUBERT.model.kmean_sampler import MultiKMeans
-class SPUBERTPTConfig:
-    def __init__(
-            self,
-            hidden_size=512,
-            num_layer=4,
-            num_head=4,
-            act_fn="relu",
-            dropout_prob=0.1,
-            input_dim=2,
-            output_dim=2,
-            goal_dim=2,
-            view_range=20.0,
-            view_angle=1.0,
-            social_range=2.0,
-            obs_len=8,
-            pred_len=12,
-            num_nbr=5,
-            scene=False,
-            num_patch=32,
-            patch_size=32,
-            col_weight=10,
-            traj_weight=1.0,
-            pad_token_id=0,
-            layer_norm_eps=1e-12,
-            initializer_range=0.02,
-            sip=False
-    ):
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.goal_dim = goal_dim
-        self.act_fn = act_fn
-        self.dropout_prob=dropout_prob
-        self.layer_norm_eps = layer_norm_eps
-
-        self.hidden_size = hidden_size
-        self.intermediate_size = hidden_size * 4
-        self.num_layer = num_layer
-        self.num_head = num_head
-
-        self.view_range = view_range
-        self.view_angle = view_angle
-        self.social_range = social_range
-        self.obs_len = obs_len
-        self.pred_len = pred_len
-        self.num_nbr = num_nbr
-
-        self.col_weight = col_weight
-        self.traj_weight = traj_weight
-
-        self.scene = scene
-        self.num_patch = num_patch
-        self.patch_size = patch_size
-
-        self.pad_token_id = pad_token_id
-        self.chunk_size_feed_forward = 0
-        self.initializer_range = initializer_range
-
-        self.sip = sip
 
 class SPUBERTTGPConfig:
     def __init__(
@@ -124,7 +59,7 @@ class SPUBERTTGPConfig:
         self.pred_len = pred_len
         self.num_nbr = num_nbr
 
-        self.col_weight = col_weight
+        # self.col_weight = col_weight
         self.traj_weight = traj_weight
 
         self.scene = scene
@@ -166,7 +101,7 @@ class SPUBERTMGPConfig:
             goal_hidden_size=64,
             goal_latent_size=64,
             kld_weight=10,
-            col_weight=10,
+            # col_weight=10,
             goal_weight=1.0,
             cvae_sigma=1.0,
             kld_clamp=None,
@@ -205,7 +140,7 @@ class SPUBERTMGPConfig:
         self.goal_hidden_size = goal_hidden_size
         self.goal_latent_size = goal_latent_size
         self.kld_weight = kld_weight
-        self.col_weight = col_weight
+        # self.col_weight = col_weight
         self.goal_weight = goal_weight
         self.share = share
 
@@ -214,7 +149,7 @@ class SPUBERTMGPConfig:
         self.normal = normal
 
 
-class SPUBERTFTConfig:
+class SPUBERTConfig:
     def __init__(self, traj_cfgs, goal_cfgs, share=False):
         # Matching Parameters
         if traj_cfgs.input_dim == goal_cfgs.input_dim:
@@ -291,10 +226,10 @@ class SPUBERTFTConfig:
         else:
             raise ValueError("layer_norm_eps")
 
-        if traj_cfgs.col_weight == goal_cfgs.col_weight:
-            self.col_weight = goal_cfgs.col_weight
-        else:
-            raise ValueError("col_weight")
+        # if traj_cfgs.col_weight == goal_cfgs.col_weight:
+        #     self.col_weight = goal_cfgs.col_weight
+        # else:
+        #     raise ValueError("col_weight")
 
         if traj_cfgs.output_dim == goal_cfgs.output_dim:
             self.output_dim = goal_cfgs.output_dim
@@ -329,7 +264,7 @@ class SPUBERTFTConfig:
                 self.num_layer = self.num_traj_layer
                 self.num_head = self.num_traj_head
 
-class SPUBERTModel(SPUBERTModelBase):
+class SPUBERTEncoderModel(SPUBERTModelBase):
     def __init__(self, cfgs):
         super().__init__(cfgs)
         if self.cfgs.scene:
@@ -367,89 +302,11 @@ class SPUBERTModel(SPUBERTModelBase):
 
         return enc_h
 
-
-
-class SPUBERTPTOutput(OrderedDict):
-    total_loss: torch.FloatTensor = None
-    # col_loss: torch.FloatTensor = None
-    mtp_loss: torch.FloatTensor = None
-    sip_loss: torch.FloatTensor = None
-    mtp_output: torch.FloatTensor = None
-    sip_output: torch.FloatTensor = None
-    attentions: Optional[Tuple[torch.FloatTensor]] = None
-
-
-
-class SPUBERTPTModel(SPUBERTModelBase):
-    def __init__(self, cfgs):
-        super().__init__(cfgs)
-        self.sbert = SPUBERTModel(cfgs=cfgs)
-        self.sip_pooler = SIPPooler(obs_len=cfgs.obs_len, pred_len=cfgs.pred_len, num_nbr=cfgs.num_nbr)
-        self.sip_decoder = SIPDecoder(hidden_size=cfgs.hidden_size)
-        self.mtp_pooler = MTPPooler(obs_len=cfgs.obs_len, pred_len=cfgs.pred_len, num_nbr=cfgs.num_nbr)
-        self.mtp_decoder = MTPDecoder(hidden_size=cfgs.hidden_size, out_dim=cfgs.output_dim, layer_norm_eps=cfgs.layer_norm_eps, act_fn=cfgs.act_fn)
-        self.init_weights()
-
-    def forward(
-            self,
-            spatial_ids,
-            temporal_ids,
-            segment_ids,
-            attn_mask,
-            traj_lbl=None,
-            goal_lbl=None,
-            traj_mask=None,
-            near_lbl=None,
-            env_spatial_ids=None,
-            env_temporal_ids=None,
-            env_segment_ids=None,
-            env_attn_mask=None,
-            envs=None,
-            envs_params=None,
-            output_attentions=False,
-    ):
-        enc_h = self.sbert(
-            spatial_ids=spatial_ids, segment_ids=segment_ids, temporal_ids=temporal_ids, attn_mask=attn_mask,
-            env_spatial_ids=env_spatial_ids, env_temporal_ids=env_temporal_ids, env_segment_ids=env_segment_ids,
-            env_attn_mask=env_attn_mask, output_attentions=output_attentions
-        )
-        mtp_h = self.mtp_pooler(enc_h["last_hidden_state"])
-        sip_h = self.sip_pooler(enc_h["last_hidden_state"])
-        mtp_out = self.mtp_decoder(mtp_h)
-        sip_out = self.sip_decoder(sip_h)
-
-        loss_mtp = MaskedADELoss()
-        mtp_loss = loss_mtp(mtp_out, traj_lbl, traj_mask)
-        total_loss = mtp_loss
-        if self.cfgs.sip:
-            loss_sip = nn.NLLLoss(ignore_index=0, reduction='mean')
-            sip_loss = loss_sip(sip_out.view(-1, 3), near_lbl.view(-1))
-            total_loss += sip_loss
-        else:
-            sip_loss = None
-
-        # if self.cfgs.scene and self.cfgs.col_weight > 0:
-        #     col_loss = self.cfgs.col_weight*pos_collision_loss(pred_trajs, envs, envs_params)
-        #     total_loss += col_loss
-        # else:
-        #     col_loss = None
-
-        return SPUBERTPTOutput(
-            total_loss=total_loss,
-            mtp_loss=mtp_loss,
-            # col_loss=col_loss,
-            sip_loss=sip_loss,
-            mtp_output=mtp_out,
-            sip_output=sip_out,
-            attentions=enc_h["attentions"],
-        )
-
-
 class SPUBERTTGPOutput(OrderedDict):
     total_loss: torch.FloatTensor = None
     ade_loss: torch.FloatTensor = None
     fde_loss: torch.FloatTensor = None
-    col_loss: torch.FloatTensor = None
+    # col_loss: torch.FloatTensor = None
     pred_trajs: torch.FloatTensor = None
     attentions: Optional[Tuple[torch.FloatTensor]] = None
 
@@ -457,7 +314,7 @@ class SPUBERTTGPOutput(OrderedDict):
 class SPUBERTTGPModel(SPUBERTModelBase):
     def __init__(self, cfgs):
         super().__init__(cfgs)
-        self.sbert = SPUBERTModel(cfgs=cfgs)
+        self.sbert = SPUBERTEncoderModel(cfgs=cfgs)
         self.traj_pooler = FutureTrajPooler(hidden_size=cfgs.hidden_size, obs_len=cfgs.obs_len, pred_len=cfgs.pred_len)
         self.sbert_decoder = SpatialDecoder(cfgs.hidden_size, cfgs.output_dim, layer_norm_eps=cfgs.layer_norm_eps, act_fn=cfgs.act_fn)
         self.init_weights()
@@ -516,17 +373,17 @@ class SPUBERTTGPModel(SPUBERTModelBase):
         ade_loss = self.cfgs.traj_weight * ade_loss
         fde_loss = self.cfgs.traj_weight * fde_loss
         total_loss = ade_loss # + fde_loss
-        if self.cfgs.scene and self.cfgs.col_weight > 0:
-            col_loss = self.cfgs.col_weight*pos_collision_loss(pred_trajs, envs, envs_params)
-            total_loss += col_loss
-        else:
-            col_loss = None
+        # if self.cfgs.scene and self.cfgs.col_weight > 0:
+        #     col_loss = self.cfgs.col_weight*pos_collision_loss(pred_trajs, envs, envs_params)
+        #     total_loss += col_loss
+        # else:
+        #     col_loss = None
 
         return SPUBERTTGPOutput(
             total_loss=total_loss,
             ade_loss=ade_loss,
             fde_loss=fde_loss,
-            col_loss=col_loss,
+            # col_loss=col_loss,
             pred_trajs=pred_trajs,
             attentions=enc_h["attentions"],
         )
@@ -534,7 +391,7 @@ class SPUBERTTGPModel(SPUBERTModelBase):
 
 class SPUBERTMGPOutput(OrderedDict):
     total_loss: torch.FloatTensor = None
-    col_loss: torch.FloatTensor = None
+    # col_loss: torch.FloatTensor = None
     gde_loss: torch.FloatTensor = None
     kld_loss: torch.FloatTensor = None
     pred_goals: torch.FloatTensor = None
@@ -545,10 +402,10 @@ class SPUBERTMGPOutput(OrderedDict):
 class SPUBERTMGPModel(SPUBERTModelBase):
     def __init__(self, goal_cfgs, share_enc=None):
         super().__init__(goal_cfgs)
-        if share_enc:
-            self.sbert = share_enc
-        else:
-            self.sbert = SPUBERTModel(goal_cfgs)
+        # if share_enc:
+        #     self.sbert = share_enc
+        # else:
+        self.sbert = SPUBERTEncoderModel(goal_cfgs)
 
         # POOLER
         self.enc_hidden_pooler = GoalPooler(hidden_size=goal_cfgs.hidden_size, obs_len=goal_cfgs.obs_len, pred_len=goal_cfgs.pred_len, act_fn=goal_cfgs.act_fn)
@@ -670,57 +527,59 @@ class SPUBERTMGPModel(SPUBERTModelBase):
         beta = 1.0
         gamma = 1.0
         # k_sample = 1000
-        if self.cfgs.normal: # B * L
-            #BetaTCVAE Loss
-            # z_r = reparametrize(r_goal_mu, r_goal_logvar)
-            # kld_loss = beta_tcvae_loss_normal(z_r, r_goal_mu, r_goal_logvar, alpha, beta, gamma)
+        # if self.cfgs.normal: # B * L
+        #BetaTCVAE Loss
+        # z_r = reparametrize(r_goal_mu, r_goal_logvar)
+        # kld_loss = beta_tcvae_loss_normal(z_r, r_goal_mu, r_goal_logvar, alpha, beta, gamma)
 
-            # KLD Loss
-            kld_loss = alpha * (-0.5 * torch.sum(1 + r_goal_logvar - r_goal_logvar.exp() - r_goal_mu.pow(2), dim=1).mean())
+        # KLD Loss
+        kld_loss = alpha * (-0.5 * torch.sum(1 + r_goal_logvar - r_goal_logvar.exp() - r_goal_mu.pow(2), dim=1).mean())
 
-            # INFOVAE
-            # z_p = torch.randn_like(z_r)
-            # kld_loss += beta * info_vae_loss(z_p, z_r)
+        # if self.cfgs.kld_clamp:
+        #     kld_loss = torch.clamp(kld_loss, min=self.cfgs.kld_clamp)
+        # INFOVAE
+        # z_p = torch.randn_like(z_r)
+        # kld_loss += beta * info_vae_loss(z_p, z_r)
 
-            # B * K * Lat
-            r_goal_std = r_goal_logvar.mul(0.5).exp()
-            k_r_goal_mu = r_goal_mu.unsqueeze(1).repeat(1, k_sample, 1)  # B * goal_hidden_size
-            k_r_goal_std = r_goal_std.unsqueeze(1).repeat(1, k_sample, 1)  # B * goal_hidden_size
+        # B * K * Lat
+        r_goal_std = r_goal_logvar.mul(0.5).exp()
+        k_r_goal_mu = r_goal_mu.unsqueeze(1).repeat(1, k_sample, 1)  # B * goal_hidden_size
+        k_r_goal_std = r_goal_std.unsqueeze(1).repeat(1, k_sample, 1)  # B * goal_hidden_size
 
-            k_pred_goal_h = pred_goal_h.unsqueeze(1).repeat(1, k_sample, 1)  # B * goal_hidden_size
-            eps = torch.randn_like(k_r_goal_std)
-            k_goal_latent = eps.mul(k_r_goal_std).add(k_r_goal_mu) # z
-            k_pred_goal_h = torch.cat([k_goal_latent, k_pred_goal_h], dim=-1)
-            bk_pred_goal_h = k_pred_goal_h.reshape(-1, self.cfgs.goal_latent_size + self.cfgs.hidden_size)  # K*B*L => B*K*L => BK * L
-        else:
-            # r_dist = torch.distributions.Normal(r_goal_mu, r_goal_logvar.mul(0.5).exp_())
-            p_goal_out = self.goal_prior_net(pred_goal_h)
-            p_goal_mu = p_goal_out[:, :self.cfgs.goal_latent_size]
-            p_goal_logvar = p_goal_out[:, self.cfgs.goal_latent_size:]
-
-            # z_p = reparametrize(p_goal_mu, p_goal_logvar)
-            # z_r = reparametrize(r_goal_mu, r_goal_logvar)
-            # BetaTCVAE
-            # kld_loss = beta_tcvae_loss(z_r, r_goal_mu, r_goal_logvar, z_p, p_goal_mu, p_goal_logvar, alpha, beta, gamma)
-            # InfoVAE
-            # kld_loss = 0.5 * ((r_goal_logvar.exp() / p_goal_logvar.exp()) + (p_goal_mu - r_goal_mu).pow(2) / p_goal_logvar.exp() - 1 + (p_goal_logvar - r_goal_logvar))
-            # kld_loss = 0.5 * ((p_goal_logvar.exp() / r_goal_logvar.exp()) + (r_goal_mu - p_goal_mu).pow(2) / r_goal_logvar.exp() - 1 + (r_goal_logvar - p_goal_logvar))
-            # kld_loss = alpha * kld_loss.sum(dim=-1).mean()
-            # kld_loss = 0.5 * ((p_goal_logvar.exp() / r_goal_logvar.exp()) + (r_goal_mu - p_goal_mu).pow(2) / r_goal_logvar.exp() - 1 + (r_goal_logvar - p_goal_logvar))
-            kld_loss = alpha * (0.5 * torch.sum((r_goal_logvar.exp() / p_goal_logvar.exp()) + (p_goal_mu - r_goal_mu).pow(2) / p_goal_logvar.exp() - 1 + (p_goal_logvar - r_goal_logvar), dim=-1).mean())
-
-            # if self.cfgs.kld_clamp:
-            #     kld_loss = torch.clamp(kld_loss, min=self.cfgs.kld_clamp)
-            # kld_loss += beta * info_vae_loss(z_p, z_r)
-            r_goal_std = r_goal_logvar.mul(0.5).exp()
-            k_r_goal_mu = r_goal_mu.unsqueeze(1).repeat(1, k_sample, 1)  # B * goal_hidden_size
-            k_r_goal_std = r_goal_std.unsqueeze(1).repeat(1, k_sample, 1)  # B * goal_hidden_size
-
-            k_pred_goal_h = pred_goal_h.unsqueeze(1).repeat(1, k_sample, 1)  # B * goal_hidden_size
-            eps = torch.randn_like(k_r_goal_std)
-            k_goal_latent = eps.mul(k_r_goal_std).add(k_r_goal_mu) # B * K * H
-            k_pred_goal_h = torch.cat([k_goal_latent, k_pred_goal_h], dim=-1)
-            bk_pred_goal_h = k_pred_goal_h.reshape(-1, self.cfgs.goal_latent_size + self.cfgs.hidden_size)  # K*B*L => B*K*L => BK * L
+        k_pred_goal_h = pred_goal_h.unsqueeze(1).repeat(1, k_sample, 1)  # B * goal_hidden_size
+        eps = torch.randn_like(k_r_goal_std)
+        k_goal_latent = eps.mul(k_r_goal_std).add(k_r_goal_mu) # z
+        k_pred_goal_h = torch.cat([k_goal_latent, k_pred_goal_h], dim=-1)
+        bk_pred_goal_h = k_pred_goal_h.reshape(-1, self.cfgs.goal_latent_size + self.cfgs.hidden_size)  # K*B*L => B*K*L => BK * L
+        # else:
+        #     # r_dist = torch.distributions.Normal(r_goal_mu, r_goal_logvar.mul(0.5).exp_())
+        #     p_goal_out = self.goal_prior_net(pred_goal_h)
+        #     p_goal_mu = p_goal_out[:, :self.cfgs.goal_latent_size]
+        #     p_goal_logvar = p_goal_out[:, self.cfgs.goal_latent_size:]
+        #
+        #     # z_p = reparametrize(p_goal_mu, p_goal_logvar)
+        #     # z_r = reparametrize(r_goal_mu, r_goal_logvar)
+        #     # BetaTCVAE
+        #     # kld_loss = beta_tcvae_loss(z_r, r_goal_mu, r_goal_logvar, z_p, p_goal_mu, p_goal_logvar, alpha, beta, gamma)
+        #     # InfoVAE
+        #     # kld_loss = 0.5 * ((r_goal_logvar.exp() / p_goal_logvar.exp()) + (p_goal_mu - r_goal_mu).pow(2) / p_goal_logvar.exp() - 1 + (p_goal_logvar - r_goal_logvar))
+        #     # kld_loss = 0.5 * ((p_goal_logvar.exp() / r_goal_logvar.exp()) + (r_goal_mu - p_goal_mu).pow(2) / r_goal_logvar.exp() - 1 + (r_goal_logvar - p_goal_logvar))
+        #     # kld_loss = alpha * kld_loss.sum(dim=-1).mean()
+        #     # kld_loss = 0.5 * ((p_goal_logvar.exp() / r_goal_logvar.exp()) + (r_goal_mu - p_goal_mu).pow(2) / r_goal_logvar.exp() - 1 + (r_goal_logvar - p_goal_logvar))
+        #     kld_loss = alpha * (0.5 * torch.sum((r_goal_logvar.exp() / p_goal_logvar.exp()) + (p_goal_mu - r_goal_mu).pow(2) / p_goal_logvar.exp() - 1 + (p_goal_logvar - r_goal_logvar), dim=-1).mean())
+        #
+        #     # if self.cfgs.kld_clamp:
+        #     #     kld_loss = torch.clamp(kld_loss, min=self.cfgs.kld_clamp)
+        #     # kld_loss += beta * info_vae_loss(z_p, z_r)
+        #     r_goal_std = r_goal_logvar.mul(0.5).exp()
+        #     k_r_goal_mu = r_goal_mu.unsqueeze(1).repeat(1, k_sample, 1)  # B * goal_hidden_size
+        #     k_r_goal_std = r_goal_std.unsqueeze(1).repeat(1, k_sample, 1)  # B * goal_hidden_size
+        #
+        #     k_pred_goal_h = pred_goal_h.unsqueeze(1).repeat(1, k_sample, 1)  # B * goal_hidden_size
+        #     eps = torch.randn_like(k_r_goal_std)
+        #     k_goal_latent = eps.mul(k_r_goal_std).add(k_r_goal_mu) # B * K * H
+        #     k_pred_goal_h = torch.cat([k_goal_latent, k_pred_goal_h], dim=-1)
+        #     bk_pred_goal_h = k_pred_goal_h.reshape(-1, self.cfgs.goal_latent_size + self.cfgs.hidden_size)  # K*B*L => B*K*L => BK * L
 
         bk_pred_goals = self.sbert_decoder(bk_pred_goal_h)  # BK * S
         pred_goals = bk_pred_goals.reshape(len(pred_goal_h), k_sample, self.cfgs.goal_dim) # self.cfgs.spatial_dim)  # BK * S => B*K*S
@@ -788,49 +647,47 @@ class SPUBERTMGPModel(SPUBERTModelBase):
         kld_loss = kld_weight * kld_loss
         gde_loss = self.cfgs.goal_weight * gde_loss
         total_loss = kld_loss + gde_loss
-        if self.cfgs.scene and self.cfgs.col_weight > 0:
-            col_loss = self.cfgs.col_weight*goal_collision_loss(pred_goals, envs, envs_params)
-            total_loss += col_loss
-        else:
-            col_loss = None
+        # if self.cfgs.scene and self.cfgs.col_weight > 0:
+        #     col_loss = self.cfgs.col_weight*goal_collision_loss(pred_goals, envs, envs_params)
+        #     total_loss += col_loss
+        # else:
+        #     col_loss = None
 
         return SPUBERTMGPOutput(
             total_loss=total_loss,
             gde_loss=gde_loss,
-            col_loss=col_loss,
+            # col_loss=col_loss,
             kld_loss=kld_loss,
             pred_goals=pred_goals,
             best_idx=best_idx,
             attentions=goal_enc_out["attentions"],
         )
 
-
-
-class SPUBERTFTOutput(OrderedDict):
+class SPUBERTOutput(OrderedDict):
     total_loss: torch.FloatTensor = None
     gde_loss: torch.FloatTensor = None
     ade_loss: torch.FloatTensor = None
     fde_loss: torch.FloatTensor = None
     kld_loss: torch.FloatTensor = None
-    mgp_col_loss: torch.FloatTensor = None
-    tgp_col_loss: torch.FloatTensor = None
+    # mgp_col_loss: torch.FloatTensor = None
+    # tgp_col_loss: torch.FloatTensor = None
     pred_trajs: torch.FloatTensor = None
     pred_goals: torch.FloatTensor = None
     mgp_attentions: Optional[Tuple[torch.FloatTensor]] = None
     tgp_attentions: Optional[Tuple[torch.FloatTensor]] = None
 
 
-class SPUBERTFTModel(SPUBERTModelBase):
+class SPUBERTModel(SPUBERTModelBase):
 
     def __init__(self, tgp_cfgs, mgp_cfgs, cfgs):
         super().__init__(cfgs)
 
-        if cfgs.share:
-            self.tgp_model = SPUBERTTGPModel(cfgs)
-            self.mgp_model = SPUBERTMGPModel(cfgs, share_enc=self.tgp_model.sbert)
-        else:
-            self.tgp_model = SPUBERTTGPModel(tgp_cfgs)
-            self.mgp_model = SPUBERTMGPModel(mgp_cfgs)
+        # if cfgs.share:
+        #     self.tgp_model = SPUBERTTGPModel(cfgs)
+        #     self.mgp_model = SPUBERTMGPModel(cfgs, share_enc=self.tgp_model.sbert)
+        # else:
+        self.tgp_model = SPUBERTTGPModel(tgp_cfgs)
+        self.mgp_model = SPUBERTMGPModel(mgp_cfgs)
         self.init_weights()
 
     def add_goals(self, spatial_ids, goals, mask_val, pad_val):
@@ -906,7 +763,7 @@ class SPUBERTFTModel(SPUBERTModelBase):
             env_temporal_ids=k_goal_env_temporal_ids, env_attn_mask=k_goal_env_attn_mask, output_attentions=output_attentions)
         pred_trajs = tgp_out["pred_trajs"].reshape(traj_batch_size, self.cfgs.k_sample, self.cfgs.pred_len, self.cfgs.output_dim)
         pred_goals = mgp_out["pred_goals"].reshape(traj_batch_size, self.cfgs.k_sample, self.cfgs.goal_dim)  # BK * S => B*K*S
-        return SPUBERTFTOutput(
+        return SPUBERTOutput(
             pred_trajs=pred_trajs,
             pred_goals=pred_goals,
             goal_attentions=mgp_out["attentions"],
@@ -948,14 +805,14 @@ class SPUBERTFTModel(SPUBERTModelBase):
             traj_lbl=traj_lbl, goal_lbl=goal_lbl, output_attentions=output_attentions)
 
 
-        return SPUBERTFTOutput(
+        return SPUBERTOutput(
             mgp_loss=mgp_out["total_loss"],
             tgp_loss=tgp_out["total_loss"],
             ade_loss=tgp_out["ade_loss"],
             fde_loss=tgp_out["fde_loss"],
             gde_loss=mgp_out["gde_loss"],
-            tgp_col_loss=tgp_out["col_loss"],
-            mgp_col_loss=mgp_out["col_loss"],
+            # tgp_col_loss=tgp_out["col_loss"],
+            # mgp_col_loss=mgp_out["col_loss"],
             kld_loss=mgp_out["kld_loss"],
             pred_trajs=tgp_out["pred_trajs"],
             pred_goals=mgp_out["pred_goals"],

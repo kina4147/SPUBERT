@@ -4,15 +4,12 @@ import time
 import tqdm
 import random
 
-import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from torch.utils.data.sampler import SubsetRandomSampler
-
 from SPUBERT.dataset.ethucy import ETHUCYDataset
 from SPUBERT.dataset.sdd import SDDDataset
 from SPUBERT.model.spubert import (
-    SPUBERTTGPConfig, SPUBERTMGPConfig, SPUBERTFTConfig, SPUBERTFTModel
+    SPUBERTTGPConfig, SPUBERTMGPConfig, SPUBERTConfig, SPUBERTModel
 )
 from SPUBERT.model.loss import bom_loss_1, bom_loss_3, goal_collision_loss, pos_collision_loss
 from SPUBERT.dataset.grid_map_numpy import estimate_map_length, estimate_num_patch
@@ -20,23 +17,19 @@ from SPUBERT.util.viz import *
 from SPUBERT.util.config import Config
 
 
-def trainer():
+def test():
 
     parser = argparse.ArgumentParser()
 
     # System Parameters
     parser.add_argument('--dataset_path', default='./data', help='dataset path')
-    parser.add_argument('--dataset_name', default='ethucy_ynet', help='dataset name (eth, sdd)')
+    parser.add_argument('--dataset_name', default='ethucy', help='dataset name (eth, sdd)')
     parser.add_argument("--dataset_split", default='univ', help='dataset split (eth-eth, hotel, univ, zara1, zara2')
-    parser.add_argument("--mode", default='finetune', help='dataset split (eth, hotel, univ, zara1, zara2')
-    parser.add_argument("--train_mode", default='fs', help='mtp_sep, mtp_shr, tgp, mgp, tgp_mgp')
-    parser.add_argument('--output_path', default='./output/sbertplus', help='glob expression for data files')
+    parser.add_argument('--output_path', default='./output', help='glob expression for data files')
+    parser.add_argument('--output_name', default='test', help='glob expression for data files')
     parser.add_argument("--cuda", action='store_true', help="training with CUDA: true, or false")
-    parser.add_argument("--share", action='store_true', help='augment scenes')
-    parser.add_argument('--freeze', action='store_true', help='augment scenes')
 
     # Training Parameters
-    parser.add_argument('--aug', action='store_true', default=True, help='augment scenes')
     parser.add_argument("--lr", type=float, default=1e-4, help="learning rate of adam")
     parser.add_argument("--dropout_prob", type=float, default=0.1, help="learning rate of adam")
     parser.add_argument('--warm_up', default=0, type=float, help='sample ratio of train/val scenes')
@@ -45,14 +38,9 @@ def trainer():
     parser.add_argument("--num_worker", type=int, default=8, help="dataloader worker size")
     parser.add_argument("--patience", type=int, default=-1, help="patience for early stopping")
 
-    parser.add_argument("--lr_scheduler", default='it_linear', help="patience for early stopping")
-    parser.add_argument("--param_last_epoch", type=float, default=0, help="learning rate of adam")
     parser.add_argument('--clip_grads', action='store_true', default=True, help='augment scenes')
-    
+
     # Model Paramters
-    parser.add_argument('--input_dim', type=int, default=2, help="number of batch_size")
-    parser.add_argument('--goal_dim', type=int, default=2, help="number of batch_size")
-    parser.add_argument('--output_dim', type=int, default=2, help="number of batch_size")
     parser.add_argument("--obs_len", type=int, default=8, help="number of observation frames")
     parser.add_argument("--pred_len", type=int, default=12, help="number of prediction frames")
     parser.add_argument("--min_obs_len", type=int, default=2, help="number of observation frames")
@@ -65,6 +53,7 @@ def trainer():
     parser.add_argument("--env_resol", type=float, default=0.2, help="socially-aware range")
     parser.add_argument("--patch_size", type=int, default=16, help="socially-aware range")
     parser.add_argument('--scene', action='store_true', help='glob expression for data files')
+    parser.add_argument('--binary_scene', action='store_true', help='augment scenes')
 
     ## Ablation Setting Parameters
     parser.add_argument("--hidden", type=int, default=256, help="hidden size of transformer model")
@@ -76,20 +65,11 @@ def trainer():
     parser.add_argument('--act_fn', default='relu', help='glob expression for data files')
 
     # Hyperparameters
-    parser.add_argument('--sip', action='store_true', help='augment scenes')
-    parser.add_argument("--cvae_sigma", type=float, default=1.0, help="learning rate of adam")
-    parser.add_argument("--kld_clamp", type=float, default=None, help="learning rate of adam")
-    parser.add_argument("--col_weight", type=float, default=0.0, help="learning rate of adam")
     parser.add_argument("--traj_weight", type=float, default=1.0, help="learning rate of adam")
     parser.add_argument("--goal_weight", type=float, default=1.0, help="learning rate of adam")
     parser.add_argument("--kld_weight", type=float, default=1.0, help="learning rate of adam")
-    parser.add_argument("--num_cycle", type=int, default=0.0, help="learning rate of adam")
-    parser.add_argument('--normal', action='store_true', help='augment scenes')
-
-
 
     ## Embedding & Loss Parameters
-    parser.add_argument("--sampling", type=float, default=1, help="sampling dataset")
     parser.add_argument("--k_sample", type=int, default=20, help="embedding size")
     parser.add_argument("--test_k_sample", type=int, default=20, help="embedding size")
     parser.add_argument("--d_sample", type=int, default=400, help="number of batch_size")
@@ -107,8 +87,27 @@ def trainer():
     parser.add_argument("--seed", type=int, default=0, help="embedding size")
     parser.add_argument("--test_seed", type=int, default=-1, help="embedding size")
     parser.add_argument('--seed_search', action='store_true', help='augment scenes')
-    parser.add_argument('--binary_scene', action='store_true', help='augment scenes')
     parser.add_argument('--scene_list', nargs='+', default=[], type=int)
+
+
+
+    # parser.add_argument('--input_dim', type=int, default=2, help="number of batch_size")
+    # parser.add_argument('--goal_dim', type=int, default=2, help="number of batch_size")
+    # parser.add_argument('--output_dim', type=int, default=2, help="number of batch_size")
+    # parser.add_argument("--mode", default='finetune', help='dataset split (eth, hotel, univ, zara1, zara2')
+    # parser.add_argument("--train_mode", default='fs', help='mtp_sep, mtp_shr, tgp, mgp, tgp_mgp')
+    # parser.add_argument("--share", action='store_true', help='augment scenes')
+    # parser.add_argument('--freeze', action='store_true', help='augment scenes')
+    # parser.add_argument('--aug', action='store_true', default=True, help='augment scenes')
+    # parser.add_argument("--lr_scheduler", default='it_linear', help="patience for early stopping")
+    # parser.add_argument("--param_last_epoch", type=float, default=0, help="learning rate of adam")
+    # parser.add_argument('--sip', action='store_true', help='augment scenes')
+    # parser.add_argument("--cvae_sigma", type=float, default=1.0, help="learning rate of adam")
+    # parser.add_argument("--kld_clamp", type=float, default=None, help="learning rate of adam")
+    # parser.add_argument("--col_weight", type=float, default=0.0, help="learning rate of adam")
+    # parser.add_argument("--num_cycle", type=int, default=0.0, help="learning rate of adam")
+    # parser.add_argument('--normal', action='store_true', help='augment scenes')
+    # parser.add_argument("--sampling", type=float, default=1, help="sampling dataset")
 
     args = parser.parse_args()
     if args.viz:
@@ -145,34 +144,32 @@ def trainer():
         np.random.seed(random_seed)
         random.seed(random_seed)
 
-    cfgs = Config(args)
-    cfgs_path = cfgs.get_path(mode=args.mode)
-    sbertplus_modelpath = os.path.join(args.output_path, cfgs_path, "full_model.pth")
+    # cfgs = Config(args)
+    # cfgs_path = cfgs.get_path(mode=args.mode)
+    model_path = os.path.join(args.output_path, args.dataset_name, "test", "full_model.pth")
 
     if args.scene:
         num_patch = estimate_num_patch(estimate_map_length(args.env_range * 2, args.env_resol), args.patch_size)
     else:
         num_patch = 0
         
-    sbert_tgp_cfgs = SPUBERTTGPConfig(
-                input_dim=args.input_dim, output_dim=args.output_dim, goal_dim=args.goal_dim,
+    spubert_tgp_cfgs = SPUBERTTGPConfig(
                 hidden_size=args.hidden, num_layer=args.layer, num_head=args.head, obs_len=args.obs_len,
                 pred_len=args.pred_len, num_nbr=args.num_nbr, scene=args.scene, num_patch=num_patch, dropout_prob=args.dropout_prob,
-                patch_size=args.patch_size, col_weight=args.col_weight, traj_weight=args.traj_weight, act_fn=args.act_fn,
+                patch_size=args.patch_size, traj_weight=args.traj_weight, act_fn=args.act_fn,
                 view_range=args.view_range, view_angle=args.view_angle, social_range=args.social_range)
 
-    sbert_mgp_cfgs = SPUBERTMGPConfig(
-                input_dim=args.input_dim, output_dim=args.output_dim, goal_dim=args.goal_dim,
+    spubert_mgp_cfgs = SPUBERTMGPConfig(
                 hidden_size=args.hidden, num_layer=args.layer, num_head=args.head, k_sample=args.test_k_sample,
                 goal_hidden_size=args.goal_hidden, goal_latent_size=args.goal_latent, obs_len=args.obs_len,
                 pred_len=args.pred_len, num_nbr=args.num_nbr, scene=args.scene, num_patch=num_patch,
-                dropout_prob=args.dropout_prob, patch_size=args.patch_size, kld_weight=args.kld_weight, col_weight=args.col_weight,
-                kld_clamp=args.kld_clamp, cvae_sigma=args.cvae_sigma, goal_weight=args.goal_weight, act_fn=args.act_fn,
-                normal=args.normal, view_range=args.view_range, view_angle=args.view_angle, social_range=args.social_range)
-    sbert_cfgs = SPUBERTFTConfig(traj_cfgs=sbert_tgp_cfgs, goal_cfgs=sbert_mgp_cfgs, share=args.share)
+                dropout_prob=args.dropout_prob, patch_size=args.patch_size, kld_weight=args.kld_weight,
+                goal_weight=args.goal_weight, act_fn=args.act_fn,
+                view_range=args.view_range, view_angle=args.view_angle, social_range=args.social_range)
+    spubert_cfgs = SPUBERTConfig(traj_cfgs=spubert_tgp_cfgs, goal_cfgs=spubert_mgp_cfgs)
     
-    model = SPUBERTFTModel(sbert_tgp_cfgs, sbert_mgp_cfgs, sbert_cfgs)
-    model.load_state_dict(torch.load(sbertplus_modelpath))
+    model = SPUBERTModel(spubert_tgp_cfgs, spubert_mgp_cfgs, spubert_cfgs)
+    model.load_state_dict(torch.load(model_path))
 
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     if args.cuda and torch.cuda.device_count() > 1:
@@ -770,4 +767,4 @@ def trainer():
             end_time = time.time()
 
 if __name__=='__main__':
-    trainer()
+    test()
