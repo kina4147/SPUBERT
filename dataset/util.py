@@ -173,15 +173,6 @@ def aug_random_scale(trajs, view_range=20.0, obs_len=8, min_scale=0.8, max_scale
 
 
 def aug_random_rotation(trajs, env=None, prob_thres=0.5):
-    # theta = np.random.choice(np.arange(0, 360, 15)) * np.pi / 180
-    # prob = random.random()
-    # if prob < prob_thres:
-    #     theta = prob/prob_thres * 2.0*np.pi
-    #     if env:
-    #         env.rotate(theta)
-    #     return rotate_trajs(trajs=trajs, theta=theta), env
-    # else:
-    #     return trajs, env
     prob = random.random()
     theta = prob * 2.0*np.pi
     if env:

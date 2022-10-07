@@ -155,13 +155,6 @@ class RectangularGridMap:
         """
 
         x_ids, y_ids, valid = self.get_xy_index_from_xy_pos(x_pos, y_pos)
-        # if (not x_ind) or (not y_ind):
-        #     return False  # NG
-        # out_ids = (x_ids < 0) | (y_ids < 0)
-        # np.delete(x_ids)
-        # grid_ids = self.calc_grid_index_from_xy_index(x_ids, y_ids)
-        # np.delete(grid_ids, (grid_ids < 0) | (grid_ids > self.num_grid))
-        # self.data[grid_ids] += up_val
         for x_idx, y_idx in zip(x_ids, y_ids):
             self.grid_map[y_idx, x_idx] += up_val
 
@@ -299,7 +292,6 @@ class RectangularGridMap:
         print("num_grid:", self.num_grid)
 
     def plot_grid_map(self, ax=None):
-        # grid_data = np.reshape(np.array(self.data), (self.height, self.width))
         if not ax:
             fig, ax = plt.subplots()
         heat_map = ax.pcolor(self.grid_map, cmap="jet", vmin=0.0, vmax=1.0)
@@ -308,7 +300,6 @@ class RectangularGridMap:
         return heat_map
 
     def plot_grid_map_in_space(self, emph=None, alpha=0.5, zorder=0, ax=None):
-        # grid_data = np.reshape(np.array(self.data), (self.height, self.width)).astype(np.int)
         if not ax:
             fig, ax = plt.subplots()
         extent = [self.min_x, self.max_x, self.min_y, self.max_y]
@@ -320,64 +311,3 @@ class RectangularGridMap:
             ax.imshow(emph, origin='lower', alpha=0.5, extent=extent, cmap="Reds", zorder=zorder)
 
         ax.axis("equal")
-
-# def test_polygon_set():
-#     ox0 = [30.0, 50.0, 80.0, 130.0, 160.0, 70.0]
-#     oy0 = [30.0, 10.0, 30.0, 60.0, 90.0, 110.0]
-#
-#
-#     ox1 = [5.0, 5.0, 15.0, 15.0]
-#     oy1 = [5.0, 15.0, 15.0, 5.0]
-#
-#
-#     ox2 = [0.0, 0.0, 20.0, 20.0]
-#     oy2 = [20.0, 40.0, 40.0, 20.0]
-#
-#
-#     ox3 = [50.0, 50.0, 80.0, 80.0]
-#     oy3 = [-20.0, -40.0, -40.0, -20.0]
-#
-#     grid_map = RectangularGridMap(600, 290, 0.7, 60.0, 30.5)
-#
-#     grid_map.set_value_from_polygon(ox0, oy0, 1.0, inside=True)
-#     grid_map.set_value_from_polygon(ox1, oy1, 1.0, inside=True)
-#     grid_map.set_value_from_polygon(ox2, oy2, 1.0, inside=True)
-#     grid_map.set_value_from_polygon(ox3, oy3, 1.0, inside=True)
-#
-#     grid_map.plot_grid_map_in_space()
-#     #
-#     plt.axis("equal")
-#     plt.grid(True)
-#
-#     return grid_map
-#
-#
-# def test_position_set():
-#     grid_map = RectangularGridMap(100, 120, 0.5, 10.0, -0.5)
-#
-#     grid_map.set_value_from_xy_pos(10.1, -1.1, 1.0)
-#     grid_map.set_value_from_xy_pos(10.1, -0.1, 1.0)
-#     grid_map.set_value_from_xy_pos(10.1, 1.1, 1.0)
-#     grid_map.set_value_from_xy_pos(11.1, 0.1, 1.0)
-#     grid_map.set_value_from_xy_pos(10.1, 0.1, 1.0)
-#     grid_map.set_value_from_xy_pos(9.1, 0.1, 1.0)
-#
-#     grid_map.plot_grid_map()
-#
-#
-# def main():
-#     print("start!!")
-#     gmap = test_polygon_set()
-#
-#     egmap = test_extract(gmap)
-#
-#     # test_position_set()
-#     # test_polygon_set()
-#
-#     plt.show()
-#
-#     print("done!!")
-#
-#
-# if __name__ == '__main__':
-#     main()

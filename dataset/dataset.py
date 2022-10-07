@@ -45,7 +45,6 @@ class SPUBERTDataset(Dataset):
 
             seqs.append(np.array(raw_data[raw_data.frame == frame_ids[idx]]))
 
-        # frame_iter = tqdm.tqdm(zip(start_frames, start_frame_ids, frames), total=len(start_frames))
         for start_frame, start_frame_id in tqdm.tqdm(zip(start_frames, start_frame_ids), total=len(start_frames)):
             seq = np.concatenate(seqs[start_frame_id:(start_frame_id + self.seq_len)], axis=0)
             pids = np.unique(seq[:, 1])
@@ -53,9 +52,6 @@ class SPUBERTDataset(Dataset):
             for tgt_pidx, tgt_pid in enumerate(pids):
                 trajs = np.full((len(pids), self.seq_len, 2), np.nan)
                 tgt_seq = seq[seq[:, 1] == tgt_pid, :]
-                # target outbound
-                # if len(tgt_seq) != self.seq_len: # incomplete trajectory for target pedestrian
-                #     continue
                 tgt_frames = (tgt_seq[:, 0] - start_frame) // frame_gap
                 tgt_frames = tgt_frames.astype(int)
                 trajs[0, tgt_frames, :] = tgt_seq[:, 2:4]
@@ -166,115 +162,7 @@ class SPUBERTDataset(Dataset):
         # ax3.set_xlim([-self.args.view_range, self.args.view_range])
         # ax3.set_ylim([-self.args.view_range, self.args.view_range])
         # plt.show()
-        #################################################
-        # if self.args.mode == "pretrain":
-        #     is_near_lbl = is_near(trajs=trajs, radius=self.args.social_range)
-        #     trajs[1:, self.args.obs_len:, :] = np.nan
-        #     tgt_traj = copy.deepcopy(trajs[0, :self.seq_len])
-        #     traj_mask = np.full(tgt_traj.shape, self.s_ind.false_val)
-        #     rand_mask = np.random.choice(self.seq_len, 3, replace=False)
-        #     for i, idx in enumerate(rand_mask):
-        #         traj_mask[idx] = self.s_ind.true_id
-        #         tgt_traj[idx] = self.s_ind.msk_id
-        #     spatial_ids = [self.s_ind.sot_id] + tgt_traj.tolist()
-        #     segment_ids = [1] + [1] * self.seq_len
-        #     temporal_ids = [self.i_ind.pad_id] + [x for x in np.arange(1, self.seq_len+1)]
-        #     attn_mask = [self.i_ind.true_val] + [self.i_ind.true_val] * self.seq_len
-        #     traj_mask = traj_mask.tolist()  # [self.s_ind.false_val] + traj_mask.tolist()
-        #     traj_lbl = copy.deepcopy(trajs[0, :self.seq_len]).tolist()
-        #
-        #     nbr_obs_trajs = copy.deepcopy(trajs[1:, :self.args.obs_len, :])
-        #     is_near_lbl = is_near_lbl[1:]
-        #     near_lbl = []
-        #     for nbr_idx, nbr_traj in enumerate(nbr_obs_trajs):
-        #         nbr_traj_lbl = copy.deepcopy(nbr_traj)
-        #         nbr_nan_idx = np.isnan(nbr_traj[:, 0])
-        #         nbr_traj[nbr_nan_idx] = self.s_ind.pad_id
-        #         nbr_traj_lbl[nbr_nan_idx] = self.s_ind.pad_id
-        #         nbr_attn_mask = np.ones(len(nbr_traj))
-        #         nbr_attn_mask[nbr_nan_idx] = self.i_ind.false_val
-        #         nbr_traj_mask = np.full(nbr_traj.shape, self.s_ind.false_val)  # true value
-        #
-        #         pos_idx = np.nonzero(~nbr_nan_idx)[0]
-        #         if len(pos_idx) >= 4:
-        #             num_mask = 1  # int(len(inbound_pos) * 0.15)
-        #             rand_mask = np.random.choice(pos_idx, num_mask, replace=False)
-        #             nbr_traj[rand_mask] = self.s_ind.msk_id
-        #             nbr_traj_mask[rand_mask] = self.s_ind.true_id
-        #
-        #         spatial_ids += [self.s_ind.sep_id] + nbr_traj.tolist()
-        #         segment_ids += [nbr_idx+2] + [self.i_ind.pad_id if nan else nbr_idx+2 for nan in nbr_nan_idx]
-        #         temporal_ids += [self.i_ind.pad_id] + [self.i_ind.pad_id if nan else x for x, nan in zip(range(1, self.args.obs_len+1), nbr_nan_idx)]
-        #         attn_mask += [self.i_ind.true_val] + nbr_attn_mask.tolist()
-        #         traj_lbl += nbr_traj_lbl.tolist()
-        #         traj_mask += nbr_traj_mask.tolist()
-        #         near_lbl += [self.i_ind.near_lbl] if is_near_lbl[nbr_idx] else [self.i_ind.far_lbl]
-        #     # collate
-        #     ext_len = self.seq_input_len - len(spatial_ids)
-        #     spatial_ids_padding = [self.s_ind.pad_id] * ext_len # [self.s_ind.pad_id for _ in range(ext_len)]
-        #     spatial_ids.extend(spatial_ids_padding)
-        #     integer_ids_padding = [self.i_ind.pad_id] * ext_len # [self.i_ind.pad_id for _ in range(ext_len)]
-        #     segment_ids.extend(integer_ids_padding), temporal_ids.extend(integer_ids_padding), attn_mask.extend(integer_ids_padding)
-        #
-        #     near_lbl_ext_len = self.args.num_nbr - len(near_lbl)
-        #     near_padding = [self.i_ind.none_lbl] * near_lbl_ext_len
-        #     near_lbl.extend(near_padding)
-        #     traj_lbl += [self.s_ind.pad_id] * near_lbl_ext_len * self.args.obs_len
-        #     traj_mask += [self.s_ind.false_id] * near_lbl_ext_len * self.args.obs_len
-        #     if self.args.scene:
-        #         if tgt_env.width % self.args.patch_size != 0: # add padding
-        #             pad_size = self.args.patch_size - (tgt_env.width % self.args.patch_size) // 2
-        #             tgt_env = expand_map_with_pad(tgt_env, 0, pad_size)
-        #             # if 'ethucy' in self.args.dataset_name:
-        #             #     tgt_env, attn_mask = expand_map_with_pad(tgt_env, 0, pad_size)
-        #             # elif 'sdd' in self.args.dataset_name:
-        #             #     tgt_env, attn_mask = expand_map_with_pad(tgt_env, 0, pad_size)
-        #             # else:
-        #             #     print("DATASET is not defined.")
-        #         if self.args.binary_scene is True:
-        #             if "ethucy" in self.args.dataset_name:
-        #                 binary = 1
-        #             elif "sdd" in self.args.dataset_name:
-        #                 binary = 2
-        #             else:
-        #                 assert True
-        #         else:
-        #             binary = None
-        #         env_spatial_ids, env_attn_mask = extract_patch_from_map(tgt_env, self.args.patch_size, binary=binary)
-        #         env_segment_ids = np.arange(start=self.args.num_nbr+1, stop=self.args.num_nbr+len(env_spatial_ids)+1)
-        #         env_temporal_ids = np.ones(len(env_spatial_ids)) * self.args.obs_len
-        #         # env_attn_mask = env_attn_mask # np.ones(len(env_spatial_ids))
-        #         envs_params = [tgt_env.min_x, tgt_env.min_y, tgt_env.width, tgt_env.height, tgt_env.resolution, 2.0]
-        #         output = {'spatial_ids': torch.tensor(spatial_ids, dtype=torch.float),
-        #                   'segment_ids': torch.tensor(segment_ids, dtype=torch.long),
-        #                   'temporal_ids': torch.tensor(temporal_ids, dtype=torch.long),
-        #                   'attn_mask': torch.tensor(attn_mask, dtype=torch.float),
-        #                   'env_spatial_ids': torch.tensor(np.array(env_spatial_ids), dtype=torch.float),
-        #                   'env_segment_ids': torch.tensor(env_segment_ids, dtype=torch.long),
-        #                   'env_temporal_ids': torch.tensor(env_temporal_ids, dtype=torch.long),
-        #                   'env_attn_mask': torch.tensor(env_attn_mask, dtype=torch.float),
-        #                   'envs': torch.tensor(tgt_env.grid_map, dtype=torch.float),
-        #                   'envs_params': torch.tensor(envs_params, dtype=torch.float),
-        #                   'traj_mask': torch.tensor(traj_mask, dtype=torch.float),
-        #                   'traj_lbl': torch.tensor(traj_lbl, dtype=torch.float),
-        #                   'near_lbl': torch.tensor(near_lbl, dtype=torch.long),
-        #                   'scales': torch.tensor(scale, dtype=torch.float)
-        #                   }
-        #         return output
-        #     else:
-        #         output = {'spatial_ids': torch.tensor(spatial_ids, dtype=torch.float),
-        #                   'segment_ids': torch.tensor(segment_ids, dtype=torch.long),
-        #                   'temporal_ids': torch.tensor(temporal_ids, dtype=torch.long),
-        #                   'attn_mask': torch.tensor(attn_mask, dtype=torch.float),
-        #                   'traj_mask': torch.tensor(traj_mask, dtype=torch.float),
-        #                   'traj_lbl': torch.tensor(traj_lbl, dtype=torch.float),
-        #                   'near_lbl': torch.tensor(near_lbl, dtype=torch.long),
-        #                   'scales': torch.tensor(scale, dtype=torch.float)
-        #                   }
-        #         return output
-        #
-        #
-        # else:
+
         trajs[1:, self.args.obs_len:, :] = np.nan
         tgt_pred_traj = copy.deepcopy(trajs[0, self.args.obs_len:])
         tgt_obs_traj = copy.deepcopy(trajs[0, :self.args.obs_len])

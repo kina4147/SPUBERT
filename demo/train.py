@@ -74,25 +74,6 @@ def train():
     parser.add_argument('--clip_grads', action='store_true', default=True, help='augment scenes')
     parser.add_argument('--viz', action='store_true', help='augment scenes')
     parser.add_argument("--patience", type=int, default=-1, help="patience for early stopping")
-    ########### REMOVABLE
-    # parser.add_argument("--lr_scheduler", default='it_linear', help="learning rate scheduler")
-    # parser.add_argument('--aug', action='store_true', default=True, help='augment scenes')
-    # parser.add_argument("--share", action='store_true', help='augment scenes')
-    # parser.add_argument('--freeze', action='store_true', help='augment scenes')
-    # parser.add_argument("--mode", default='finetune', help='dataset split (eth, hotel, univ, zara1, zara2')
-    # # parser.add_argument("--train_mode", default='fs', help='mtp_sep, mtp_shr, tgp, mgp, tgp_mgp')
-    # parser.add_argument('--input_dim', type=int, default=2, help="number of batch_size")
-    # parser.add_argument('--goal_dim', type=int, default=2, help="--number of batch_size")
-    # parser.add_argument('--output_dim', type=int, default=2, help="number of batch_size")
-    # parser.add_argument('--sip', action='store_true', help='augment scenes')
-    # parser.add_argument("--col_weight", type=float, default=0.0, help="learning rate of adam")
-    # parser.add_argument("--cvae_sigma", type=float, default=1.0, help="learning rate of adam")
-    # parser.add_argument("--kld_clamp", type=float, default=None, help="learning rate of adam")
-    # parser.add_argument("--num_cycle", type=int, default=0, help="learning rate of adam")
-    # parser.add_argument('--normal', action='store_true', help='augment scenes')
-    # parser.add_argument("--sampling", type=float, default=1, help="sampling dataset")
-    # parser.add_argument("--param_last_epoch", type=float, default=0, help="learning rate of adam")
-
     args = parser.parse_args()
 
     if args.dataset_name == 'ethucy':
@@ -114,15 +95,15 @@ def train():
     else:
         print("Dataset is not loaded.")
 
-    if args.seed > 0:
-        random_seed = args.seed
-        torch.manual_seed(random_seed)
-        torch.cuda.manual_seed(random_seed)
-        torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-        np.random.seed(random_seed)
-        random.seed(random_seed)
+    # if args.seed > 0:
+    random_seed = args.seed
+    torch.manual_seed(random_seed)
+    torch.cuda.manual_seed(random_seed)
+    torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(random_seed)
+    random.seed(random_seed)
 
 
     # cfgs = Config(args)
