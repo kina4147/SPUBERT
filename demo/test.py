@@ -245,10 +245,6 @@ def test():
                     total_fderror += fderror
                     total_gderror += gderror
                     total_data += len(data["mgp_spatial_ids"])
-                    # print("\nEpoch Evaluation Result >>>>> ADE: %f, FDE: %f, GDE: %f" % (
-                    #     aderror / len(data["mgp_spatial_ids"]), fderror / len(data["mgp_spatial_ids"]),
-                    #     gderror / len(data["mgp_spatial_ids"])))
-
                 total_ade = total_aderror / total_data
                 print("Total Evaluation Result >>>>> SEED: %f, ADE: %f, FDE: %f, GDE: %f" % (
                 seed, total_aderror / total_data, total_fderror / total_data, total_gderror / total_data))
