@@ -146,7 +146,7 @@ def test():
 
     # cfgs = Config(args)
     # cfgs_path = cfgs.get_path(mode=args.mode)
-    model_path = os.path.join(args.output_path, args.dataset_name, "test", "full_model.pth")
+    model_path = os.path.join(args.output_path, args.dataset_name, args.dataset_split, args.output_name, "full_model.pth")
 
     if args.scene:
         num_patch = estimate_num_patch(estimate_map_length(args.env_range * 2, args.env_resol), args.patch_size)

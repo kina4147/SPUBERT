@@ -127,7 +127,7 @@ def train():
 
     # cfgs = Config(args)
     # cfgs_path = cfgs.get_path(mode=args.mode)
-    model_path = os.path.join(args.output_path, args.dataset_name, args.output_name)#cfgs_path)
+    model_path = os.path.join(args.output_path, args.dataset_name, args.dataset_split, args.output_name)#cfgs_path)
     os.makedirs(model_path, exist_ok=True)
     # cfgs.save_yml_config(cfgs_path)
     tb_writer = SummaryWriter(os.path.join("logs", model_path))
