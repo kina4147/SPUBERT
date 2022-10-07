@@ -228,9 +228,9 @@ class SPUBERTTrainer(object):
                                      traj_lbl=data["traj_lbl"], goal_lbl=data["goal_lbl"], envs=data["envs"],
                                      envs_params=data["envs_params"], kld_weight=self.kld_weight,
                                      traj_weight=self.traj_weight, goal_weight=self.goal_weight)
-                if self.args.col_weight > 0:
-                    total_mgp_col_loss += outputs["mgp_col_loss"].mean().item()
-                    total_tgp_col_loss += outputs["tgp_col_loss"].mean().item()
+                # if self.args.col_weight > 0:
+                #     total_mgp_col_loss += outputs["mgp_col_loss"].mean().item()
+                #     total_tgp_col_loss += outputs["tgp_col_loss"].mean().item()
             else:
                 outputs = self.model(mgp_spatial_ids=data["mgp_spatial_ids"],
                                      mgp_temporal_ids=data["mgp_temporal_ids"],
@@ -270,9 +270,9 @@ class SPUBERTTrainer(object):
         total_gde_loss = total_gde_loss / len(data_iter)
         total_mgp_loss = total_mgp_loss / len(data_iter)
         total_tgp_loss = total_tgp_loss / len(data_iter)
-        if self.args.scene and self.args.col_weight > 0:
-            total_mgp_col_loss = total_mgp_col_loss / len(data_iter)
-            total_tgp_col_loss = total_tgp_col_loss / len(data_iter)
+        # if self.args.scene and self.args.col_weight > 0:
+        #     total_mgp_col_loss = total_mgp_col_loss / len(data_iter)
+        #     total_tgp_col_loss = total_tgp_col_loss / len(data_iter)
         total_loss = total_mgp_loss + total_tgp_loss
         # total_loss = total_loss / len(data_iter)
         print("[MGP] total_mgp=%f, kld=%f, gde=%f, col=%f" % (total_mgp_loss, total_kld_loss, total_gde_loss, total_mgp_col_loss))
