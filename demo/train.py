@@ -137,7 +137,7 @@ def train():
         tb_writer.add_scalar('weight/gde', params['goal_weight'], epoch)
 
         # validation model save
-        if True: # test_dataloader is not None and (epoch+1) % 1 == 0 and args.test and epoch > args.epoch/2:
+        if args.test: # and epoch > args.epoch/2:
             aderror, fderror, gderror = trainer.test(epoch, test_dataloader, args.d_sample, args.k_sample)
             print("[TEST] ADE({:.4f}), FDE({:.4f}), GDE({:.4f})".format(aderror, fderror, gderror))
             # min_aderror = min(min_aderror, aderror)
@@ -147,7 +147,7 @@ def train():
             tb_writer.add_scalar('test/ade', aderror, epoch)
             tb_writer.add_scalar('test/fde', fderror, epoch)
             tb_writer.add_scalar('test/gde', gderror, epoch)
-            if stopper(aderror):
+            if stopper(aderror, fderror, epoch):
                 if trainer.parallel:
                     stopper.save_model(model_path, trainer.model.module, model_name="full_model")
                 else:
