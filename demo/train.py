@@ -137,7 +137,7 @@ def train():
         tb_writer.add_scalar('weight/gde', params['goal_weight'], epoch)
 
         # validation model save
-        if args.test: # and epoch > args.epoch/2:
+        if args.test and epoch > 50:
             aderror, fderror, gderror = trainer.test(epoch, test_dataloader, args.d_sample, args.k_sample)
             print("[TEST] ADE({:.4f}), FDE({:.4f}), GDE({:.4f})".format(aderror, fderror, gderror))
             # min_aderror = min(min_aderror, aderror)
