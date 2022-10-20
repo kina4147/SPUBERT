@@ -31,7 +31,7 @@ def train():
     parser.add_argument("--dropout_prob", type=float, default=0.1, help="dropout probability")
     parser.add_argument('--warm_up', default=0, type=float, help='warmup iteration')
     parser.add_argument("--batch_size", type=int, default=32, help="batch_size")
-    parser.add_argument("--epoch", type=int, default=200, help="number of epochs")
+    parser.add_argument("--epoch", type=int, default=400, help="number of epochs")
     parser.add_argument("--num_worker", type=int, default=4, help="dataloader worker size")
 
     # Model Paramters
@@ -137,7 +137,7 @@ def train():
         tb_writer.add_scalar('weight/gde', params['goal_weight'], epoch)
 
         # validation model save
-        if args.test and epoch > 50:
+        if args.test and epoch > args.epoch/2:
             aderror, fderror, gderror = trainer.test(epoch, test_dataloader, args.d_sample, args.k_sample)
             print("[TEST] ADE({:.4f}), FDE({:.4f}), GDE({:.4f})".format(aderror, fderror, gderror))
             # min_aderror = min(min_aderror, aderror)
