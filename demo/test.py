@@ -714,7 +714,7 @@ def test():
                         gderror, aderror, fderror, best_gde_idx, best_ade_idx, best_fde_idx = bom_loss_1(
                             outputs["pred_goals"], outputs["pred_trajs"], data["goal_lbl"], data["traj_lbl"],
                             args.test_k_sample)
-                        print("Epoch Evaluation Result >>>>> ADE: %f, FDE: %f, GDE: %f" % (
+                        print("\nEpoch Evaluation Result >>>>> ADE: %f, FDE: %f, GDE: %f" % (
                             aderror / len(data["mgp_spatial_ids"]), fderror / len(data["mgp_spatial_ids"]),
                             gderror / len(data["mgp_spatial_ids"])))
 
@@ -757,7 +757,7 @@ def test():
                     print("\nEpoch Evaluation Result >>>>> ADE: %f, FDE: %f, GDE: %f" % (
                         aderror / len(data["mgp_spatial_ids"]), fderror / len(data["mgp_spatial_ids"]),
                         gderror / len(data["mgp_spatial_ids"])))
-                    print("\nEpoch Average Time >>>>> ", avg_time)
+                    print("Epoch Average Time >>>>> ", avg_time)
 
             print("Total Evaluation Result >>>>> ADE: %f, FDE: %f, GDE: %f" % (total_aderror/total_data, total_fderror/total_data, total_gderror/total_data))
             print("Total Average Computation Time >>>>> %f s" % avg_time)
