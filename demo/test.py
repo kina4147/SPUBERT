@@ -202,7 +202,7 @@ def test():
                 total_gderror = 0
                 total_data = 0
                 data_iter = tqdm.tqdm(enumerate(test_dataloader),
-                                      desc="%s" % ("TEST"),
+                                      desc="%s \n" % ("TEST"),
                                       total=len(test_dataloader),
                                       bar_format="{l_bar}{r_bar}")
                 for i, data in data_iter:
@@ -310,7 +310,8 @@ def test():
                             pred_goals = model.mgp_model.goal_predict(spatial_ids=data["mgp_spatial_ids"], temporal_ids=data["mgp_temporal_ids"],
                                                 segment_ids=data["mgp_segment_ids"], attn_mask=data["mgp_attn_mask"], num_goal=args.d_sample)
 
-                print("avg time: ", diff_time / (i+1))
+                avg_time = diff_time / (i + 1)
+                print("avg time: ", avg_time)
                 if args.viz:
                     _, _, _, best_gde_idx, _, _ = bom_loss_1(
                         outputs["pred_goals"], outputs["pred_trajs"], data["goal_lbl"], data["traj_lbl"],
@@ -759,6 +760,7 @@ def test():
                         gderror / len(data["mgp_spatial_ids"])))
 
             print("Total Evaluation Result >>>>> ADE: %f, FDE: %f, GDE: %f" % (total_aderror/total_data, total_fderror/total_data, total_gderror/total_data))
+            print("Total Average Computation Time >>>>> %f s" % avg_time)
             # print("Evaluation Result >>>>> ADE: %f, FDE: %f, GDE: %f, GADE: %f, GFDE: %f" % (total_aderror/len(data_iter), total_fderror/len(data_iter), total_gderror/len(data_iter), total_gaderror/len(data_iter), total_gfderror/len(data_iter)))
             end_time = time.time()
 
