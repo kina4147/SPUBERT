@@ -274,13 +274,13 @@ def test():
                         continue
                 data = {key: value.to(device) for key, value in data.items()}
                 if args.scene:
-                    # start_time = time.time()
+                    start_time = time.time()
                     outputs = model.inference(mgp_spatial_ids=data["mgp_spatial_ids"],
                                     mgp_temporal_ids=data["mgp_temporal_ids"], mgp_segment_ids=data["mgp_segment_ids"], mgp_attn_mask=data["mgp_attn_mask"],
                                     tgp_temporal_ids=data["tgp_temporal_ids"], tgp_segment_ids=data["tgp_segment_ids"], tgp_attn_mask=data["tgp_attn_mask"],
                                     env_spatial_ids=data["env_spatial_ids"], env_temporal_ids=data["env_temporal_ids"],
                                     env_segment_ids=data["env_segment_ids"], env_attn_mask=data["env_attn_mask"], output_attentions=True, d_sample=args.d_sample)
-                    # diff_time += (time.time() - start_time)
+                    diff_time += (time.time() - start_time)
                     if args.viz:
                         if parallel:
                             pred_goals = model.module.mgp_model.goal_predict(spatial_ids=data["mgp_spatial_ids"], temporal_ids=data["mgp_temporal_ids"],
@@ -294,12 +294,12 @@ def test():
                                                     env_spatial_ids=data["env_spatial_ids"], env_temporal_ids=data["env_temporal_ids"],
                                                     env_segment_ids=data["env_segment_ids"], env_attn_mask=data["env_attn_mask"], num_goal=args.d_sample)
                 else:
-                    # start_time = time.time()
+                    start_time = time.time()
                     outputs = model.inference(mgp_spatial_ids=data["mgp_spatial_ids"],
                                     mgp_temporal_ids=data["mgp_temporal_ids"], mgp_segment_ids=data["mgp_segment_ids"], mgp_attn_mask=data["mgp_attn_mask"],
                                     tgp_temporal_ids=data["tgp_temporal_ids"], tgp_segment_ids=data["tgp_segment_ids"], tgp_attn_mask=data["tgp_attn_mask"],
                                     output_attentions=True, d_sample=args.d_sample)
-                    # diff_time += (time.time() - start_time)
+                    diff_time += (time.time() - start_time)
 
                     if args.viz:
                         if parallel:
@@ -310,7 +310,7 @@ def test():
                             pred_goals = model.mgp_model.goal_predict(spatial_ids=data["mgp_spatial_ids"], temporal_ids=data["mgp_temporal_ids"],
                                                 segment_ids=data["mgp_segment_ids"], attn_mask=data["mgp_attn_mask"], num_goal=args.d_sample)
 
-                # print("avg time: ", diff_time / (i+1))
+                print("avg time: ", diff_time / (i+1))
                 if args.viz:
                     _, _, _, best_gde_idx, _, _ = bom_loss_1(
                         outputs["pred_goals"], outputs["pred_trajs"], data["goal_lbl"], data["traj_lbl"],
