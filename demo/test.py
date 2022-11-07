@@ -311,7 +311,6 @@ def test():
                                                 segment_ids=data["mgp_segment_ids"], attn_mask=data["mgp_attn_mask"], num_goal=args.d_sample)
 
                 avg_time = diff_time / (i + 1)
-                print("avg time: ", avg_time)
                 if args.viz:
                     _, _, _, best_gde_idx, _, _ = bom_loss_1(
                         outputs["pred_goals"], outputs["pred_trajs"], data["goal_lbl"], data["traj_lbl"],
@@ -758,6 +757,7 @@ def test():
                     print("\nEpoch Evaluation Result >>>>> ADE: %f, FDE: %f, GDE: %f" % (
                         aderror / len(data["mgp_spatial_ids"]), fderror / len(data["mgp_spatial_ids"]),
                         gderror / len(data["mgp_spatial_ids"])))
+                    print("\nEpoch Average Time >>>>> ", avg_time)
 
             print("Total Evaluation Result >>>>> ADE: %f, FDE: %f, GDE: %f" % (total_aderror/total_data, total_fderror/total_data, total_gderror/total_data))
             print("Total Average Computation Time >>>>> %f s" % avg_time)
