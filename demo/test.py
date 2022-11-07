@@ -714,7 +714,7 @@ def test():
                         gderror, aderror, fderror, best_gde_idx, best_ade_idx, best_fde_idx = bom_loss_1(
                             outputs["pred_goals"], outputs["pred_trajs"], data["goal_lbl"], data["traj_lbl"],
                             args.test_k_sample)
-                        print("\nEpoch Evaluation Result >>>>> ADE: %f, FDE: %f, GDE: %f" % (
+                        print("Epoch Evaluation Result >>>>> ADE: %f, FDE: %f, GDE: %f" % (
                             aderror / len(data["mgp_spatial_ids"]), fderror / len(data["mgp_spatial_ids"]),
                             gderror / len(data["mgp_spatial_ids"])))
 
