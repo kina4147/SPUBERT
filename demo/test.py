@@ -180,7 +180,7 @@ def test():
         parallel = False
     model.to(device)
 
-
+    diff_time = 0
 
     with torch.no_grad():
         model.eval()
