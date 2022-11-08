@@ -1,6 +1,6 @@
 # SPU-BERT: Faster Human Multi-Trajectory Prediction from Socio-Physical Understanding of BERT.
 
-<center><img src="overview.png" width="80%" height="80%"></center>
+<p aligh="center"><img src="overview.png" width="80%" height="80%"></p>
 
 ## Abstract
 Pedestrian trajectory prediction should be based on social and physical understanding, considering movement patterns, nearby pedestrians, and surrounding obstacles simultaneously in a complex and crowded space. Also, it is necessary to generate multiple trajectories in the same situation to realize the multi-modality of human movement. In this paper, we propose SPU-BERT, a socially and physically acceptable multi-trajectory prediction for pedestrians using two sequential BERTs for multi-goal prediction (MGP) and trajectory-to-goal prediction (TGP) with fast computation. 
