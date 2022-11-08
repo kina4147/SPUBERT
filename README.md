@@ -1,6 +1,6 @@
-# SPU-BERT
+# SPU-BERT: Faster Human Multi-Trajectory Prediction from Socio-Physical Understanding of BERT.
 
-# Codes for View Vertically: A Hierarchical Network for Trajectory Prediction via Fourier Spectrums
+# Codes for SPU-BERT: Faster Human Multi-Trajectory Prediction from Socio-Physical Understanding of BERT.
 
 ![$V^2$-Net](./vmethod.png)
 
@@ -16,19 +16,7 @@ The coarse-level keypoints estimation sub-network first predicts the "minimal" s
 Then the fine-level spectrum interpolation sub-network interpolates the spectrums to reconstruct the final predictions.
 Experimental results display the competitiveness and superiority of V$^2$-Net on both ETH-UCY benchmark and the Stanford Drone Dataset.
 
-## Citation
 
-Our paper is now available at https://arxiv.org/pdf/2110.07288.pdf.  
-If you find this work useful, it would be grateful to cite our paper!
-
-```bib
-@article{wong2021view,
-  title={View Vertically: A hierarchical network for trajectory prediction via fourier spectrums},
-  author={Wong, Conghao and Xia, Beihao and Hong, Ziming and Peng, Qinmu and Yuan, Wei and Cao, Qiong and Yang, Yibo and You, Xinge},
-  journal={arXiv preprint arXiv:2110.07288},
-  year={2021}
-}
-```
 
 ## Requirements
 
@@ -356,7 +344,22 @@ Dataset csv files of ETH-UCY come from [SR-LSTM (CVPR2019) / E-SR-LSTM (TPAMI202
 Original dataset annotation files of SDD come from [Stanford Drone Dataset](https://cvgl.stanford.edu/projects/uav_data/), and its split file comes from [SimAug (ECCV2020)](https://github.com/JunweiLiang/Multiverse);  
 [@MeiliMa](https://github.com/MeiliMa) for dataset suggestions.
 
+
+
+
+
+## Citation  
+If you find this work useful, it would be grateful to cite our paper!
+
+```bib
+@article{na2022knowledge,
+  title={SPU-BERT: Faster Human Multi-Trajectory Prediction from Socio-Physical Understanding of BERT},
+  author={Ki-In Na, Ue-Hwan Kim, and Jong-Hwan Kim},
+  journal={Knowledge Based Systems (submitted)},
+  year={2022}
+}
+```
+
 ## Contact us
 
-Conghao Wong ([@cocoon2wong](https://github.com/cocoon2wong)): conghao_wong@icloud.com  
-Beihao Xia ([@NorthOcean](https://github.com/NorthOcean)): xbh_hust@hust.edu.cn
+Ki-In Na ([@kina4147](https://github.com/kina4147)): kina4147@gmail.com  
