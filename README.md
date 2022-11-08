@@ -1,120 +1,121 @@
 # SPU-BERT: Faster Human Multi-Trajectory Prediction from Socio-Physical Understanding of BERT.
 
-![SPU-BERT](./overview.png)
+![SPU-BERT](./overview.png){: width="300" height="300"){: .center}
 
 ## Abstract
-
-Understanding and forecasting future trajectories of agents are critical for behavior analysis, robot navigation, autonomous cars, and other related applications.
-Previous methods mostly treat trajectory prediction as time sequence generation.
-Different from them, this work studies agents' trajectories in a "vertical" view, i.e., modeling and forecasting trajectories from the spectral domain.
-Different frequency bands in the trajectory spectrums could hierarchically reflect agents' motion preferences at different scales.
-The low-frequency and high-frequency portions could represent their coarse motion trends and fine motion variations, respectively.
-Accordingly, we propose a hierarchical network V$^2$-Net, which contains two sub-networks, to hierarchically model and predict agents' trajectories with trajectory spectrums.
-The coarse-level keypoints estimation sub-network first predicts the "minimal" spectrums of agents' trajectories on several "key" frequency portions.
-Then the fine-level spectrum interpolation sub-network interpolates the spectrums to reconstruct the final predictions.
-Experimental results display the competitiveness and superiority of V$^2$-Net on both ETH-UCY benchmark and the Stanford Drone Dataset.
-
+Pedestrian trajectory prediction should be based on social and physical understanding, considering movement patterns, nearby pedestrians, and surrounding obstacles simultaneously in a complex and crowded space. Also, it is necessary to generate multiple trajectories in the same situation to realize the multi-modality of human movement. In this paper, we propose SPU-BERT, a socially and physically acceptable multi-trajectory prediction for pedestrians using two sequential BERTs for multi-goal prediction (MGP) and trajectory-to-goal prediction (TGP) with fast computation. 
+MGP consists of Transformer encoder and generative models to predict multiple goals. TGP with Transformer encoder generates multiple trajectories approaching the predicted goals of MGP. 
+SPU-BERT can predict socio-physically acceptable multi-trajectory by understanding movements, social interactions, and scene contexts in trajectories and semantic map. In addition, the explainable results give confidence in the socio-physical understanding of SPU-BERT.
 
 
 ## Requirements
-
-The codes are developed with python 3.8.
-Additional packages used are included in the `requirements.txt` file.
-We recommend installing the above versions of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to the package version conflicts.
-
-Run the following command to install the required packages in your python  environment:
+The codes are developed with python 3.6.
+We tested the codes in python 3.6, 3.7, and 3.8.
+Additional packages are included in the `requirements.txt`.
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Training
-
 
 
 ### Dataset
+Download datasets([data.zip](https://drive.google.com/file/d/1F80d4mEM9XXIJyaNhbBX9CSXDSDx-3Cy/view?usp=share_link)) including ETH/UCY dataset and Stanford drone dataset.
+```bash
+    ├── data                 # Datasets
+    │    ├── ethucy          # ETH/UCY dataset
+    │    └── sdd             # Stanford drone dataset
+    ├── dataset              # files to load dataset: dataset.py, ethucy.py, sdd.py 
+    ├── demo                 # executable files: train.py and test.py
+    ├── output               # trained models
+    │    ├── ethucy          # directory of the trained models for ETH/UCY datasets (eth, hotel, univ, zara1, zara2)
+    │    └── sdd             # directory of the trained models for SDD (default)
+    └── util
+```
 
-ETH/UCY Datasets
-Standford Drone Dataset (SDD)
-Before training `V^2-Net` on your own dataset, you should add your dataset information to the `datasets` directory.
-See [this document](./datasetFormat.md) for details.
+## Arguments
+
+- `--cuda`, type=`bool`: The usage of GPU. 
+- `--dataset_name`, type=`str`: The name of dataset among `ethucy` and `sdd`.
+- `--dataset_split`, type=`str`: The split of dataset among `eth`, `hotel`, `univ`, `zara1`, and `zara2` for ETH/UCY dataset.
+- `--output_name`, type=`str`: The name of output model 
+- `--hidden`, type=`int`: The size of hidden state.
+- `--layer`, type=`int`: The number of layers in Transformer encoders of MGP and TGP. 
+- `--head`, type=`int`: The number of heads in Transformer encoders of MGP and TGP. 
+- `--num_nbr`, type=`int`: The maximum number of neighbor pedestrians.
+- `--view_angle`, type=`float`: The view angle to consider social interaction at the current frame.
+- `--social_range`, type=`float`: The social range to consider social interaction at the current frame. 
+- `--view_range`, type=`float`: The trajectory boundary range to filter out unnecessary trajectory positions.
+- `--scene`, type=`bool`: The consideration of scene interaction 
+- `--env_range`, type=`float`: The range of semantic map. 
+- `--env_resol`, type=`float`: The resolution of semantic map.
+- `--patch_size`, type=`int`: The size of patch for semantic map embedding.
+- `--d_sample`, type=`int`: The number of goal intention samples.
+
+## Training
+```bash
+python -m demo.train  (--cuda) --dataset_name DATASET_NAME --dataset_split DATASET_SPLIT \
+                       --output_name MODEL_NAME --d_sample NUM_GIS --num_nbr NUM_NEIGHBOR --scene 
+```
+For ETH/UCY dataset, `DATASET_SPLIT` can be `eth`, `hotel`, `univ`, `zara1`, `zara2`.
+
+For SDD, `DATASET_SPLIT` can be `default`. `--dataset_split` can be omitted because `default` is automatically set when `--dataset_name` is `sdd`.
+
+The detailed description of arguments are explained in Argument below.
 
 ## Evaluation
 
-You can use the following command to evaluate the `V^2-Net` performance end-to-end:
-
 ```bash
-python main.py \
-  --model V \
-  --loada A_MODEL_PATH \
-  --loadb B_MODEL_PATH
+python -m demo.test  (--cuda) --dataset_name DATASET_NAME --dataset_split DATASET_SPLIT \
+                      --output_name MODEL_NAME --d_sample NUM_GIS --num_nbr NUM_NEIGHBOR --scene
 ```
 
-Where `A_MODEL_PATH` and `B_MODEL_PATH` are the folders of the two sub-networks' weights.
 
 ## Pre-Trained Models
+Download the pretrained model([output.zip](https://drive.google.com/file/d/1F80d4mEM9XXIJyaNhbBX9CSXDSDx-3Cy/view?usp=share_link)) 
 
-We have provided pre-trained models to help you quickly evaluate the SPU-BERT.
-You can download them here.
-
-
-It contains model weights trained on `ETH-UCY` by the `leave-one-out` stragety, and model weights trained on `SDD` via the dataset split method from [SimAug](https://github.com/JunweiLiang/Multiverse).
-Please note that we do not use dataset split files like trajectron++ or trajnet for several reasons.
-For example, the frame rate problem in `ETH-eth` sub-dataset, and some of these splits only consider the `pedestrians` in the SDD dataset.
-We process the original full-dataset files from these datasets with observations = 3.2 seconds (or 8 frames) and predictions = 4.8 seconds (or 12 frames) to train and test the model.
-Detailed process codes are available in `./scripts/add_ethucy_datasets.py`, `./scripts/add_sdd.py`, and `./scripts/sdd_txt2csv.py`.
-
-You can start the quick evaluation via the following commands:
-
+The pretrained models are distinguished by the name of directory and the files have the same name `full_model.pth`.
+If the datasets (`--dataset_name`) and splits (`--dataset_split`) are configured, the pretrained model path are automatically generated without the last directory.
+Therefore, by configuring the output name (`--output_name`), the different pretrained models can be loaded and evaluated.
+For example, 
 ```bash
-for dataset in eth hotel univ zara1 zara2 sdd
-  python main.py \
-    --model V \
-    --loada ./weights/vertical/a_${dataset} \
-    --loadb ./weights/vertical/b_${dataset}
+--dataset_name ethucy --dataset_split eth --hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene 
 ```
-
-## Args Used
-
-Please specific your customized args when training or testing your model through the following way:
-
+`--output_name` is set as `h256l4a4_nbr4_scnO_d1000`.
 ```bash
-python main.py --ARG_KEY1 ARG_VALUE2 --ARG_KEY2 ARG_VALUE2 --ARG_KEY3 ARG_VALUE3 ...
-```
+    └── output               
+         ├── ethucy 
+         │    ├── eth ── h256l4a4_nbr4_scnO_d1000 ── full_model.pth
+         │    ├── hotel
+         │    ├── univ
+         │    ├── zara1
+         │    └── zara2
+         └── sdd   
+              └── default          
+    
+```  
+We provide various pretrained models with different settings as below.
+- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
+- `h256l4a8_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
+- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
+- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
+- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
+- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
+- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
+- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
+- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
+- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
 
-where `ARG_KEY` is the name of args, and `ARG_VALUE` is the corresponding value.
-All args and their usages when training and testing are listed below.
-Args with `argtype='static'` means that their values can not be changed once after training.
-
-<!-- DO NOT CHANGE THIS LINE -->
-### Basic args
-
-- `--K_train`, type=`int`, argtype=`'static'`.
-  Number of multiple generations when training. This arg only works for `Generative Models`.
-  The default value is `10`.
-- `--K`, type=`int`, argtype=`'dynamic'`.
-  Number of multiple generations when test. This arg only works for `Generative Models`.
-  The default value is `20`.
 
 
-### Vertical args
 
-- `--K_train`, type=`int`, argtype=`'static'`.
-  Number of multiple generations when training.
-  The default value is `1`.
-- `--K`, type=`int`, argtype=`'dynamic'`.
-  Number of multiple generations when evaluating. The number of trajectories predicted for one agent is calculated by `N = args.K * args.Kc`, where `Kc` is the number of style channels.
-  The default value is `1`.
+
 
 ## Thanks
 
-Codes of the Transformers used in this model comes from [TensorFlow.org](https://www.tensorflow.org/tutorials/text/transformer);  
-Dataset csv files of ETH-UCY come from [SR-LSTM (CVPR2019) / E-SR-LSTM (TPAMI2020)](https://github.com/zhangpur/SR-LSTM);  
-Original dataset annotation files of SDD come from [Stanford Drone Dataset](https://cvgl.stanford.edu/projects/uav_data/), and its split file comes from [SimAug (ECCV2020)](https://github.com/JunweiLiang/Multiverse);  
-[@MeiliMa](https://github.com/MeiliMa) for dataset suggestions.
+Transformers used in this model comes from [HugginFace](https://huggingface.co/).
 
-
-
+ETH/UCY Dataset and SDD come from [Y-Net](https://github.com/HarshayuGirase/Human-Path-Prediction).  
 
 
 ## Citation  

@@ -67,7 +67,7 @@ def train():
     parser.add_argument("--d_sample", type=int, default=400, help="embedding size")
 
     # Train Only
-    parser.add_argument('--test', action='store_true', help='augment scenes')
+    parser.add_argument('--test', action='store_true', default=True, help='augment scenes')
     parser.add_argument("--seed", type=int, default=0, help="embedding size")
 
 
