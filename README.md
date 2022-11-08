@@ -2,7 +2,7 @@
 
 # Codes for SPU-BERT: Faster Human Multi-Trajectory Prediction from Socio-Physical Understanding of BERT.
 
-![$V^2$-Net](./vmethod.png)
+![$V^2$-Net](./overview.png)
 
 ## Abstract
 
@@ -20,7 +20,7 @@ Experimental results display the competitiveness and superiority of V$^2$-Net on
 
 ## Requirements
 
-The codes are developed with python 3.9.
+The codes are developed with python 3.8.
 Additional packages used are included in the `requirements.txt` file.
 We recommend installing the above versions of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to the package version conflicts.
 
@@ -32,45 +32,14 @@ pip install -r requirements.txt
 
 ## Training On Your Datasets
 
-The `V^2-Net` contains two main sub-networks, the coarse-level keypoints estimation sub-network, and the fine-level spectrum interpolation sub-network.
-`V^2-Net` forecast agents' multiple trajectories end-to-end.
-Considering that most of the loss function terms used to optimize the model work within one sub-network alone, we divide `V^2-Net` into `V^2-Net-a` and `V^2-Net-b`, and apply gradient descent separately for easier training.
-You can train your own `V^2-Net` weights on your datasets by training each of these two sub-networks.
-After training, you can still use it as a regular end-to-end model.
+
 
 ### Dataset
 
+ETH/UCY Datasets
+Standford Drone Dataset (SDD)
 Before training `V^2-Net` on your own dataset, you should add your dataset information to the `datasets` directory.
 See [this document](./datasetFormat.md) for details.
-
-### `V^2-Net-a`
-
-It is the coarse-level keypoints estimation sub-network.
-To train the `V^2-Net-a`, you can pass the `--model va` argument to run the `main.py`.
-You should also specify the temporal keypoint indexes in the predicted period.
-For example, when you want to train a model that predicts future 12 frames of trajectories, and you would like to set $N_{key} = 3$ (which is the same as the basic settings in our paper), you can pass the `--key_points 3_7_11` argument when training.
-Please note that indexes start with `0`.
-You can also try any other keypoints settings or combinations to train and obtain the `V^2-Net-a` that best fits your datasets.
-Please refer to section `Args Used` to learn how other args work when training and evaluating.
-Note that do not pass any value to `--load` when training, or it will start *evaluating* the loaded model.
-
-For a quick start, you can train the `V^2-Net-a` via the following minimum arguments:
-
-```bash
-python main.py --model va --key_points 3_7_11 --test_set MyDataset
-```
-
-### `V^2-Net-b`
-
-It is the fine-level spectrum interpolation sub-network.
-You can pass the `--model vb` to run the training.
-Please note that you should specify the number of temporal keypoints.
-For example, you can pass the `--points 3` to train the corresponding sub-network that takes 3 temporal keypoints or their spectrums as the input.
-Similar to the above `V^2-Net-a`, you can train the `V^2-Net-b` with the following minimum arguments:
-
-```bash
-python main.py --model vb --points 3 --test_set MyDataset
-```
 
 ## Evaluation
 
@@ -110,33 +79,13 @@ for dataset in eth hotel univ zara1 zara2 sdd
 
 After the code running, you will see the output in the `./test.log` file:
 
-```log
-[2022-07-26 14:47:50,444][INFO] `V`: Results from ./weights/vertical/a_eth, ./weights/vertical/b_eth, eth, {'ADE(m)': 0.23942476, 'FDE(m)': 0.3755888}
-...
-[2022-07-26 10:27:00,028][INFO] `V`: Results from ./weights/vertical/a_hotel, ./weights/vertical/b_hotel, hotel, {'ADE(m)': 0.107846856, 'FDE(m)': 0.1635725}
-...
-[2022-07-25 20:23:31,744][INFO] `V`: Results from ./weights/vertical/a_univ, ./weights/vertical/b_univ, univ, {'ADE(m)': 0.20977141, 'FDE(m)': 0.35295317}
-...
-[2022-07-26 10:07:42,727][INFO] `V`: Results from ./weights/vertical/a_zara1, ./weights/vertical/b_zara1, zara1, {'ADE(m)': 0.19370425, 'FDE(m)': 0.3097202}
-...
-[2022-07-26 10:10:52,098][INFO] `V`: Results from ./weights/vertical/a_zara2, ./weights/vertical/b_zara2, zara2, {'ADE(m)': 0.1495939, 'FDE(m)': 0.24811372}
-...
-[2022-07-26 14:44:44,637][INFO] `V`: Results from ./weights/vertical/a_sdd, ./weights/vertical/b_sdd, sdd, {'ADE(m)': 0.068208106, 'FDE(m)': 0.10638584}
-```
-
 Please note that the results may fluctuate slightly at each model implementation due to the random sampling in the model (which is used to generate multiple stochastic predictions).
 In addition, we shrunk all SDD data by a scale factor of 100 when training the model.
 The data recorded in the `./test.log` multiplied by 100 is the result we report in the paper.
 
 You can also start testing the fast version of `V^2-Net` by passing the argument `--loadb l` like:
 
-```bash
-for dataset in eth hotel univ zara1 zara2 sdd
-  python main.py \
-    --model V \
-    --loada ./weights/vertical/a_${dataset} \
-    --loadb l
-```
+
 
 The `--loadb l` will replace the original stage-2 spectrum interpolation sub-network with the simple linear interpolation method.
 Although it may reduce the prediction performance, the model will implement much faster.
@@ -239,75 +188,7 @@ Args with `argtype='static'` means that their values can not be changed once aft
 - `--K`, type=`int`, argtype=`'dynamic'`.
   Number of multiple generations when test. This arg only works for `Generative Models`.
   The default value is `20`.
-- `--batch_size`, type=`int`, argtype=`'dynamic'`.
-  Batch size when implementation.
-  The default value is `5000`.
-- `--draw_distribution`, type=`int`, argtype=`'dynamic'`.
-  Conrtols if draw distributions of predictions instead of points.
-  The default value is `0`.
-- `--draw_results`, type=`int`, argtype=`'dynamic'`.
-  Controls if draw visualized results on video frames. Make sure that you have put video files into `./videos` according to the specific name way.
-  The default value is `0`.
-- `--epochs`, type=`int`, argtype=`'static'`.
-  Maximum training epochs.
-  The default value is `500`.
-- `--force_set`, type=`str`, argtype=`'dynamic'`.
-  Force test dataset. Only works when evaluating when `test_mode` is `one`.
-  The default value is `'null'`.
-- `--gpu`, type=`str`, argtype=`'dynamic'`.
-  Speed up training or test if you have at least one nvidia GPU. If you have no GPUs or want to run the code on your CPU, please set it to `-1`.
-  The default value is `'0'`.
-- `--load`, type=`str`, argtype=`'dynamic'`.
-  Folder to load model. If set to `null`, it will start training new models according to other args.
-  The default value is `'null'`.
-- `--log_dir`, type=`str`, argtype=`'static'`.
-  Folder to save training logs and models. If set to `null`, logs will save at `args.save_base_dir/current_model`.
-  The default value is `dir_check(default_log_dir)`.
-- `--lr`, type=`float`, argtype=`'static'`.
-  Learning rate.
-  The default value is `0.001`.
-- `--model_name`, type=`str`, argtype=`'static'`.
-  Customized model name.
-  The default value is `'model'`.
-- `--model`, type=`str`, argtype=`'static'`.
-  Model type used to train or test.
-  The default value is `'none'`.
-- `--obs_frames`, type=`int`, argtype=`'static'`.
-  Observation frames for prediction.
-  The default value is `8`.
-- `--pred_frames`, type=`int`, argtype=`'static'`.
-  Prediction frames.
-  The default value is `12`.
-- `--restore`, type=`str`, argtype=`'dynamic'`.
-  Path to restore the pre-trained weights before training. It will not restore any weights if `args.restore == 'null'`.
-  The default value is `'null'`.
-- `--save_base_dir`, type=`str`, argtype=`'static'`.
-  Base folder to save all running logs.
-  The default value is `'./logs'`.
-- `--save_model`, type=`int`, argtype=`'static'`.
-  Controls if save the final model at the end of training.
-  The default value is `1`.
-- `--start_test_percent`, type=`float`, argtype=`'static'`.
-  Set when to start validation during training. Range of this arg is `0 <= x <= 1`. Validation will start at `epoch = args.epochs * args.start_test_percent`.
-  The default value is `0.0`.
-- `--step`, type=`int`, argtype=`'dynamic'`.
-  Frame interval for sampling training data.
-  The default value is `1`.
-- `--test_mode`, type=`str`, argtype=`'dynamic'`.
-  Test settings, canbe `'one'` or `'all'` or `'mix'`. When set it to `one`, it will test the model on the `args.force_set` only; When set it to `all`, it will test on each of the test dataset in `args.test_set`; When set it to `mix`, it will test on all test dataset in `args.test_set` together.
-  The default value is `'mix'`.
-- `--test_set`, type=`str`, argtype=`'static'`.
-  Dataset used when training or evaluating.
-  The default value is `'zara1'`.
-- `--test_step`, type=`int`, argtype=`'static'`.
-  Epoch interval to run validation during training. """ return self._get('test_step', 3, argtype='static') """ Trajectory Prediction Args 
-  The default value is `3`.
-- `--use_extra_maps`, type=`int`, argtype=`'dynamic'`.
-  Controls if uses the calculated trajectory maps or the given trajectory maps. The model will load maps from `./dataset_npz/.../agent1_maps/trajMap.png` if set it to `0`, and load from `./dataset_npz/.../agent1_maps/trajMap_load.png` if set this argument to `1`.
-  The default value is `0`.
-- `--use_maps`, type=`int`, argtype=`'static'`.
-  Controls if uses the context maps to model social and physical interactions in the model.
-  The default value is `1`.
+
 
 ### Vertical args
 
@@ -317,25 +198,6 @@ Args with `argtype='static'` means that their values can not be changed once aft
 - `--K`, type=`int`, argtype=`'dynamic'`.
   Number of multiple generations when evaluating. The number of trajectories predicted for one agent is calculated by `N = args.K * args.Kc`, where `Kc` is the number of style channels.
   The default value is `1`.
-- `--Kc`, type=`int`, argtype=`'static'`.
-  Number of hidden categories used in alpha model.
-  The default value is `20`.
-- `--depth`, type=`int`, argtype=`'static'`.
-  Depth of the random noise vector (for random generation).
-  The default value is `16`.
-- `--feature_dim`, type=`int`, argtype=`'static'`.
-  Feature dimension used in most layers.
-  The default value is `128`.
-- `--key_points`, type=`str`, argtype=`'static'`.
-  A list of key-time-steps to be predicted in the agent model. For example, `'0_6_11'`.
-  The default value is `'0_6_11'`.
-- `--points`, type=`int`, argtype=`'static'`.
-  Controls number of points (representative time steps) input to the beta model. It only works when training the beta model only.
-  The default value is `1`.
-- `--preprocess`, type=`str`, argtype=`'static'`.
-  Controls if running any preprocess before model inference. Accept a 3-bit-like string value (like `'111'`): - the first bit: `MOVE` trajectories to (0, 0); - the second bit: re-`SCALE` trajectories; - the third bit: `ROTATE` trajectories.
-  The default value is `'111'`.
-<!-- DO NOT CHANGE THIS LINE -->
 
 ## Thanks
 
