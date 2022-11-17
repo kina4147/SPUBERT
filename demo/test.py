@@ -3,7 +3,6 @@ import os
 import time
 import tqdm
 import random
-import copy
 from torch.utils.data import DataLoader
 from SPUBERT.dataset.ethucy import ETHUCYDataset
 from SPUBERT.dataset.sdd import SDDDataset
