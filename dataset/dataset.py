@@ -166,7 +166,6 @@ class SPUBERTDataset(Dataset):
             env_spatial_ids, env_attn_mask  = extract_patch_from_map(tgt_env, self.args.patch_size, binary=binary)
             env_segment_ids = np.arange(start=self.args.num_nbr+1, stop=self.args.num_nbr+len(env_spatial_ids)+1)
             env_temporal_ids = np.ones(len(env_spatial_ids)) * self.args.obs_len
-            # env_attn_mask = np.ones(len(env_spatial_ids))
             envs_params = [tgt_env.min_x, tgt_env.min_y, tgt_env.width, tgt_env.height, tgt_env.resolution, 2]
 
             output = {'mgp_spatial_ids': torch.tensor(mgp_spatial_ids, dtype=torch.float),
