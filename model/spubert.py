@@ -31,7 +31,6 @@ class SPUBERTTGPConfig:
             scene=False,
             num_patch=32,
             patch_size=32,
-            # traj_weight=1.0,
             pad_token_id=0,
             layer_norm_eps=1e-12,
             initializer_range=0.02,
@@ -52,7 +51,6 @@ class SPUBERTTGPConfig:
         self.obs_len = obs_len
         self.pred_len = pred_len
         self.num_nbr = num_nbr
-        # self.traj_weight = traj_weight
         self.scene = scene
         self.num_patch = num_patch
         self.patch_size = patch_size
@@ -86,10 +84,6 @@ class SPUBERTMGPConfig:
             k_sample=20,
             goal_hidden_size=64,
             goal_latent_size=64,
-            # kld_weight=1.0,
-            # goal_weight=1.0,
-            cvae_sigma=1.0,
-            kld_clamp=None,
     ):
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -121,11 +115,7 @@ class SPUBERTMGPConfig:
         self.k_sample = k_sample
         self.goal_hidden_size = goal_hidden_size
         self.goal_latent_size = goal_latent_size
-        # self.kld_weight = kld_weight
-        # self.goal_weight = goal_weight
 
-        self.cvae_sigma = cvae_sigma
-        self.kld_clamp = kld_clamp
 
 
 class SPUBERTConfig:
@@ -217,11 +207,6 @@ class SPUBERTConfig:
         self.k_sample = goal_cfgs.k_sample
         self.goal_hidden_size = goal_cfgs.goal_hidden_size
         self.goal_latent_size = goal_cfgs.goal_latent_size
-        # self.kld_weight = goal_cfgs.kld_weight
-        # self.cvae_sigma = goal_cfgs.cvae_sigma
-        self.kld_clamp = goal_cfgs.kld_clamp
-        # self.traj_weight = traj_cfgs.traj_weight
-        # self.goal_weight = goal_cfgs.goal_weight
         self.num_traj_layer = traj_cfgs.num_layer
         self.num_traj_head = traj_cfgs.num_head
         self.num_goal_layer = goal_cfgs.num_layer
@@ -402,7 +387,7 @@ class SPUBERTMGPModel(SPUBERTModelBase):
             d_sample = k_sample
 
         p_goal_mu = torch.zeros(pred_goal_h.size(0), d_sample, self.cfgs.goal_latent_size).to(pred_goal_h.device)
-        p_goal_std = torch.ones(pred_goal_h.size(0), d_sample, self.cfgs.goal_latent_size).mul(self.cfgs.cvae_sigma).to(pred_goal_h.device)
+        p_goal_std = torch.ones(pred_goal_h.size(0), d_sample, self.cfgs.goal_latent_size).to(pred_goal_h.device)
         k_pred_goal_h = pred_goal_h.unsqueeze(1).repeat(1, d_sample, 1)  # B * goal_hidden_size
         eps = torch.randn_like(p_goal_std)
         k_goal_latent = eps.mul(p_goal_std).add(p_goal_mu)
