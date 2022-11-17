@@ -95,16 +95,13 @@ def test():
         
     spubert_tgp_cfgs = SPUBERTTGPConfig(
                 hidden_size=args.hidden, num_layer=args.layer, num_head=args.head, obs_len=args.obs_len,
-                pred_len=args.pred_len, num_nbr=args.num_nbr, scene=args.scene, num_patch=num_patch, dropout_prob=args.dropout_prob,
-                patch_size=args.patch_size, traj_weight=args.traj_weight, act_fn=args.act_fn,
-                view_range=args.view_range, view_angle=args.view_angle, social_range=args.social_range)
+                pred_len=args.pred_len, num_nbr=args.num_nbr, scene=args.scene, num_patch=num_patch,
+                patch_size=args.patch_size, view_range=args.view_range, view_angle=args.view_angle, social_range=args.social_range)
 
     spubert_mgp_cfgs = SPUBERTMGPConfig(
                 hidden_size=args.hidden, num_layer=args.layer, num_head=args.head, k_sample=args.k_sample,
                 goal_hidden_size=args.goal_hidden, goal_latent_size=args.goal_latent, obs_len=args.obs_len,
-                pred_len=args.pred_len, num_nbr=args.num_nbr, scene=args.scene, num_patch=num_patch,
-                dropout_prob=args.dropout_prob, patch_size=args.patch_size, kld_weight=args.kld_weight,
-                goal_weight=args.goal_weight, act_fn=args.act_fn,
+                pred_len=args.pred_len, num_nbr=args.num_nbr, scene=args.scene, num_patch=num_patch, patch_size=args.patch_size,
                 view_range=args.view_range, view_angle=args.view_angle, social_range=args.social_range)
     spubert_cfgs = SPUBERTConfig(traj_cfgs=spubert_tgp_cfgs, goal_cfgs=spubert_mgp_cfgs)
     

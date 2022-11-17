@@ -24,14 +24,13 @@ class SPUBERTTrainer(object):
         num_patch = estimate_num_patch(estimate_map_length(args.env_range*2, args.env_resol), args.patch_size)
         self.sbert_tgp_cfgs = SPUBERTTGPConfig(
             hidden_size=args.hidden, num_layer=args.layer, num_head=args.head, obs_len=args.obs_len,
-            pred_len=args.pred_len, num_nbr=args.num_nbr, scene=args.scene, num_patch=num_patch, dropout_prob=args.dropout_prob,
+            pred_len=args.pred_len, num_nbr=args.num_nbr, scene=args.scene, num_patch=num_patch,
             patch_size=args.patch_size, view_range=args.view_range, view_angle=args.view_angle, social_range=args.social_range)
 
         self.sbert_mgp_cfgs = SPUBERTMGPConfig(
             hidden_size=args.hidden, num_layer=args.layer, num_head=args.head, k_sample=args.k_sample,
             goal_hidden_size=args.goal_hidden, goal_latent_size=args.goal_latent, obs_len=args.obs_len,
-            pred_len=args.pred_len, num_nbr=args.num_nbr, scene=args.scene, num_patch=num_patch,
-            dropout_prob=args.dropout_prob, patch_size=args.patch_size,
+            pred_len=args.pred_len, num_nbr=args.num_nbr, scene=args.scene, num_patch=num_patch, patch_size=args.patch_size,
             view_range=args.view_range, view_angle=args.view_angle, social_range=args.social_range)
 
         self.sbert_cfgs = SPUBERTConfig(traj_cfgs=self.sbert_tgp_cfgs, goal_cfgs=self.sbert_mgp_cfgs)

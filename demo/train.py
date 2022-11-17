@@ -26,7 +26,6 @@ def train():
 
     # Training Parameters
     parser.add_argument("--lr", type=float, default=1e-4, help="learning rate of AdamW")
-    parser.add_argument("--dropout_prob", type=float, default=0.1, help="dropout probability")
     parser.add_argument('--warm_up', default=1000, type=float, help='warmup iteration')
     parser.add_argument("--batch_size", type=int, default=32, help="batch_size")
     parser.add_argument("--epoch", type=int, default=400, help="number of epochs")
