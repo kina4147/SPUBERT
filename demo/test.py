@@ -28,20 +28,18 @@ def test():
     parser.add_argument("--cuda", action='store_true', help="training with CUDA: true, or false")
 
     # Training Parameters
-    parser.add_argument("--lr", type=float, default=1e-4, help="learning rate of adam")
-    parser.add_argument("--dropout_prob", type=float, default=0.1, help="learning rate of adam")
-    parser.add_argument('--warm_up', default=0, type=float, help='sample ratio of train/val scenes')
+    # parser.add_argument("--lr", type=float, default=1e-4, help="learning rate of adam")
+    # parser.add_argument("--dropout_prob", type=float, default=0.1, help="learning rate of adam")
+    # parser.add_argument('--warm_up', default=1000, type=float, help='sample ratio of train/val scenes')
+    # parser.add_argument("--epoch", type=int, default=200, help="number of epochs")
+    # parser.add_argument("--patience", type=int, default=-1, help="patience for early stopping")
+    # parser.add_argument('--clip_grads', action='store_true', default=True, help='augment scenes')
+
     parser.add_argument("--batch_size", type=int, default=32, help="number of batch_size")
-    parser.add_argument("--epoch", type=int, default=200, help="number of epochs")
     parser.add_argument("--num_worker", type=int, default=8, help="dataloader worker size")
-    parser.add_argument("--patience", type=int, default=-1, help="patience for early stopping")
-
-    parser.add_argument('--clip_grads', action='store_true', default=True, help='augment scenes')
-
     # Model Paramters
     parser.add_argument("--obs_len", type=int, default=8, help="number of observation frames")
     parser.add_argument("--pred_len", type=int, default=12, help="number of prediction frames")
-    parser.add_argument("--min_obs_len", type=int, default=2, help="number of observation frames")
     parser.add_argument("--num_nbr", type=int, default=4, help="number of neighbors")
     parser.add_argument("--view_range", type=float, default=20.0, help="accessible range of target pedestrian")
     parser.add_argument("--view_angle", type=float, default=2.09, help="accessible range of target pedestrian")
@@ -51,7 +49,7 @@ def test():
     parser.add_argument("--env_resol", type=float, default=0.2, help="socially-aware range")
     parser.add_argument("--patch_size", type=int, default=16, help="socially-aware range")
     parser.add_argument('--scene', action='store_true', help='glob expression for data files')
-    parser.add_argument('--binary_scene', action='store_true', help='augment scenes')
+    # parser.add_argument('--binary_scene', action='store_true', help='augment scenes')
 
     ## Ablation Setting Parameters
     parser.add_argument("--hidden", type=int, default=256, help="hidden size of transformer model")
@@ -61,11 +59,6 @@ def test():
     parser.add_argument("--goal_hidden", type=int, default=64, help="hidden size of transformer model")
     parser.add_argument("--goal_latent", type=int, default=32, help="hidden size of transformer model")
     parser.add_argument('--act_fn', default='relu', help='glob expression for data files')
-
-    # Hyperparameters
-    parser.add_argument("--traj_weight", type=float, default=1.0, help="learning rate of adam")
-    parser.add_argument("--goal_weight", type=float, default=1.0, help="learning rate of adam")
-    parser.add_argument("--kld_weight", type=float, default=1.0, help="learning rate of adam")
 
     ## Embedding & Loss Parameters
     parser.add_argument("--k_sample", type=int, default=20, help="embedding size")

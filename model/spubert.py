@@ -86,7 +86,7 @@ class SPUBERTMGPConfig:
             k_sample=20,
             goal_hidden_size=64,
             goal_latent_size=64,
-            kld_weight=10,
+            kld_weight=1.0,
             goal_weight=1.0,
             cvae_sigma=1.0,
             kld_clamp=None,

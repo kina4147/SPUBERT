@@ -22,7 +22,7 @@ class SDDDataset(SPUBERTDataset):
         df_data = pd.read_pickle(filepath)
         df_data.head()
         self.env = {}
-        self.min_obs_len = self.args.min_obs_len if self.split == 'train' else self.args.obs_len
+        self.min_obs_len = 2 if self.split == 'train' else self.args.obs_len
 
 
         with open(os.path.join(self.path, 'scales.yml'), 'r') as f:

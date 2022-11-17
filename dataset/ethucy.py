@@ -15,7 +15,7 @@ class ETHUCYDataset(SPUBERTDataset):
         df_data = pd.read_pickle(filepath)
         df_data.head()
         self.env = {}
-        self.min_obs_len = self.args.min_obs_len if self.split == 'train' else self.args.obs_len
+        self.min_obs_len = 2 if self.split == 'train' else self.args.obs_len
         with open(os.path.join(self.path, 'scales.yml'), 'r') as f:
             self.scales = yaml.load(f, Loader=yaml.FullLoader)
         scene_trajs, meta, scene_ids, scene_frames, scene_start_frames = self.split_trajectories_by_scene(df_data, self.args.obs_len+self.args.pred_len)

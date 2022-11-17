@@ -1,4 +1,5 @@
-
+import torch
+import copy
 import tqdm
 import transformers
 from SPUBERT.model.spubert import (
@@ -26,21 +27,18 @@ class SPUBERTTrainer(object):
         self.sbert_tgp_cfgs = SPUBERTTGPConfig(
             hidden_size=args.hidden, num_layer=args.layer, num_head=args.head, obs_len=args.obs_len,
             pred_len=args.pred_len, num_nbr=args.num_nbr, scene=args.scene, num_patch=num_patch, dropout_prob=args.dropout_prob,
-            patch_size=args.patch_size, traj_weight=args.traj_weight, act_fn=args.act_fn,
-            view_range=args.view_range, view_angle=args.view_angle, social_range=args.social_range)
+            patch_size=args.patch_size, view_range=args.view_range, view_angle=args.view_angle, social_range=args.social_range)
 
         self.sbert_mgp_cfgs = SPUBERTMGPConfig(
             hidden_size=args.hidden, num_layer=args.layer, num_head=args.head, k_sample=args.k_sample,
             goal_hidden_size=args.goal_hidden, goal_latent_size=args.goal_latent, obs_len=args.obs_len,
             pred_len=args.pred_len, num_nbr=args.num_nbr, scene=args.scene, num_patch=num_patch,
-            dropout_prob=args.dropout_prob, patch_size=args.patch_size, kld_weight=args.kld_weight,
-            goal_weight=args.goal_weight, act_fn=args.act_fn,
+            dropout_prob=args.dropout_prob, patch_size=args.patch_size,
             view_range=args.view_range, view_angle=args.view_angle, social_range=args.social_range)
 
         self.sbert_cfgs = SPUBERTConfig(traj_cfgs=self.sbert_tgp_cfgs, goal_cfgs=self.sbert_mgp_cfgs)
         self.model = SPUBERTModel(self.sbert_tgp_cfgs, self.sbert_mgp_cfgs, self.sbert_cfgs)
         self.model.to(self.device)
-
 
         self.mgp_optim = transformers.AdamW(self.model.mgp_model.parameters(), lr=args.lr, eps=1e-6, betas=(0.9, 0.999), weight_decay=0.01)
         self.tgp_optim = transformers.AdamW(self.model.tgp_model.parameters(), lr=args.lr, eps=1e-6, betas=(0.9, 0.999), weight_decay=0.01)
