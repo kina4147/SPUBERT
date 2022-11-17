@@ -58,9 +58,7 @@ def train():
     parser.add_argument("--d_sample", type=int, default=1000, help="embedding size")
 
     # Train Only
-    parser.add_argument('--test', action='store_true', default=True, help='augment scenes')
     parser.add_argument("--seed", type=int, default=80819, help="embedding size")
-
     parser.add_argument("--patience", type=int, default=-1, help="patience for early stopping")
     args = parser.parse_args()
 
@@ -100,7 +98,7 @@ def train():
     for epoch in range(args.epoch):
         trainer.train(epoch)
 
-        if args.test and epoch > args.epoch/2:
+        if epoch > args.epoch/2:
             aderror, fderror, gderror = trainer.test(epoch, test_dataloader, args.d_sample, args.k_sample)
             print("[TEST] ADE({:.4f}), FDE({:.4f}), GDE({:.4f})".format(aderror, fderror, gderror))
             if stopper(aderror, fderror, epoch):
