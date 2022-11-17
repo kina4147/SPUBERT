@@ -5,15 +5,11 @@ Adopt the Trajectron dataset to make experiment easier
 TODO: convert to our own dataset format later
 '''
 import os
-import sys
-# sys.path.append(os.path.realpath('./sbertplus/dataset'))
-import tqdm
 import cv2
 import yaml
 import copy
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from SPUBERT.dataset.dataset import SPUBERTDataset
 from SPUBERT.dataset.grid_map_numpy import RectangularGridMap
 from SPUBERT.dataset.util import is_target_outbound
@@ -31,9 +27,6 @@ class SDDDataset(SPUBERTDataset):
 
         with open(os.path.join(self.path, 'scales.yml'), 'r') as f:
             self.scales = yaml.load(f, Loader=yaml.FullLoader)
-
-        # for sid in self.scales:
-        #     self.scales[sid] = 0.25
 
         scene_trajs, meta, scene_ids, scene_frames, scene_start_frames = self.split_trajectories_by_scene(df_data, self.args.obs_len+self.args.pred_len)
 
@@ -70,9 +63,6 @@ class SDDDataset(SPUBERTDataset):
                         self.all_trajs.append(tmp_curr_trajs)
                         self.all_scenes.append(scene_id)
 
-                # self.all_trajs = self.all_trajs[:100]
-                if self.split == 'test' and self.args.viz and len(self.all_trajs) > 100:
-                    break
         else:
             for trajs, scene_id, frames, start_frames in zip(scene_trajs, scene_ids, scene_frames, scene_start_frames):
                 for start_frame in start_frames:
@@ -88,8 +78,6 @@ class SDDDataset(SPUBERTDataset):
                             continue
                         self.all_trajs.append(tmp_curr_trajs)
                         self.all_scenes.append(scene_id)
-                if self.split == 'test' and self.args.viz and len(self.all_trajs) > 100:
-                    break
 
 
     def split_trajectories_by_scene(self, data, total_len):

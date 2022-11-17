@@ -2,31 +2,6 @@ import torch
 import numpy as np
 
 class MultiKMeans:
-    '''
-    Kmeans clustering algorithm implemented with PyTorch
-    Parameters:
-      n_kmeans: int,
-        Number of concurrent KMeans algorithms
-      n_clusters: int,
-        Number of clusters
-      max_iter: int, default: 100
-        Maximum number of iterations
-      tol: float, default: 0.0001
-        Tolerance
-
-      verbose: int, default: 0
-        Verbosity
-      mode: {'euclidean', 'cosine'}, default: 'euclidean'
-        Type of distance measure
-      minibatch: {None, int}, default: None
-        Batch size of MinibatchKmeans algorithm
-        if None perform full KMeans algorithm
-
-    Attributes:
-      centroids: torch.Tensor, shape: [n_clusters, n_features]
-        cluster centroids
-    '''
-
     def __init__(self, n_clusters, n_kmeans, max_iter=100, tol=0.0001, verbose=0, mode="euclidean", minibatch=None):
         self.n_clusters = n_clusters
         self.n_kmeans = n_kmeans

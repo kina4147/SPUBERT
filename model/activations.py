@@ -17,12 +17,6 @@ import math
 import torch
 import torch.nn.functional as F
 from packaging import version
-#
-# from .utils import logging
-#
-#
-# logger = logging.get_logger(__name__)
-
 
 def _gelu_python(x):
     """

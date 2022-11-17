@@ -1,16 +1,7 @@
-'''
-NOTE: May 6
-Adopt the Trajectron dataset to make experiment easier
-
-TODO: convert to our own dataset format later
-'''
 import os
-import sys
 import copy
-# sys.path.append(os.path.realpath('./dataset'))
 import numpy as np
 import pandas as pd
-import tqdm
 import yaml
 import cv2
 from SPUBERT.dataset.dataset import SPUBERTDataset
@@ -25,8 +16,6 @@ class ETHUCYDataset(SPUBERTDataset):
         df_data.head()
         self.env = {}
         self.min_obs_len = self.args.min_obs_len if self.split == 'train' else self.args.obs_len
-        # num_scene = 0
-        # self.scales = {}
         with open(os.path.join(self.path, 'scales.yml'), 'r') as f:
             self.scales = yaml.load(f, Loader=yaml.FullLoader)
         scene_trajs, meta, scene_ids, scene_frames, scene_start_frames = self.split_trajectories_by_scene(df_data, self.args.obs_len+self.args.pred_len)
@@ -37,7 +26,6 @@ class ETHUCYDataset(SPUBERTDataset):
                 homo_path = os.path.join(self.path, scene_id + '_H.txt')
                 homo_mat = np.loadtxt(homo_path)
                 num_ped, seq_len, sdim = trajs.shape
-                # if scene_id in ['eth', 'hotel']:
                 trajs[:, :, [0, 1]] = trajs[:, :, [1, 0]]
                 trajs = trajs.reshape(-1, 2)
                 trajs = self.image2world(trajs, homo_mat)
@@ -82,19 +70,11 @@ class ETHUCYDataset(SPUBERTDataset):
                             continue
                         self.all_trajs.append(tmp_curr_trajs)
                         self.all_scenes.append(scene_id)
-                # self.all_trajs = self.all_trajs[:100]
-                if self.split == 'test' and self.args.viz and len(self.all_trajs) > 100:
-                    break
-                # if len(self.all_trajs) > 100:
-                #     self.all_trajs = self.all_trajs[:100]
-                #     break
         else:
             for trajs, scene_id, frames, start_frames in zip(scene_trajs, scene_ids, scene_frames, scene_start_frames):
                 homo_path = os.path.join(self.path, scene_id + '_H.txt')
                 homo_mat = np.loadtxt(homo_path)
                 num_ped, seq_len, sdim = trajs.shape
-                # if scene_id in ['eth', 'hotel']:
-                #     trajs[:, :, [0, 1]] = trajs[:, :, [1, 0]]
                 trajs = trajs.reshape(-1, 2)
                 trajs = self.image2world(trajs, homo_mat)
                 trajs = trajs.reshape(num_ped, seq_len, sdim)
@@ -112,12 +92,6 @@ class ETHUCYDataset(SPUBERTDataset):
                             continue
                         self.all_trajs.append(tmp_curr_trajs)
                         self.all_scenes.append(scene_id)
-                if self.split == 'test' and self.args.viz and len(self.all_trajs) > 100:
-                    break
-
-                # if len(self.all_trajs) > 100:
-                #     self.all_trajs = self.all_trajs[:100]
-                #     break
 
     def split_trajectories_by_scene(self, data, total_len):
         trajectories = []

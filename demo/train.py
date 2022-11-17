@@ -11,8 +11,8 @@ from SPUBERT.dataset.ethucy import ETHUCYDataset
 from SPUBERT.dataset.sdd import SDDDataset
 from SPUBERT.model.trainer import SPUBERTTrainer
 
-from SPUBERT.util.stopper import EarlyStopping, save_model
-from SPUBERT.util.config import Config
+from SPUBERT.util.stopper import EarlyStopping
+
 def train():
 
     parser = argparse.ArgumentParser()
@@ -64,15 +64,13 @@ def train():
 
     # Embedding & Loss Parameters
     parser.add_argument("--k_sample", type=int, default=20, help="embedding size")
-    parser.add_argument("--d_sample", type=int, default=400, help="embedding size")
+    parser.add_argument("--d_sample", type=int, default=1000, help="embedding size")
 
     # Train Only
     parser.add_argument('--test', action='store_true', default=True, help='augment scenes')
-    parser.add_argument("--seed", type=int, default=0, help="embedding size")
-
+    parser.add_argument("--seed", type=int, default=80819, help="embedding size")
 
     parser.add_argument('--clip_grads', action='store_true', default=True, help='augment scenes')
-    parser.add_argument('--viz', action='store_true', help='augment scenes')
     parser.add_argument("--patience", type=int, default=-1, help="patience for early stopping")
     args = parser.parse_args()
 
@@ -95,68 +93,31 @@ def train():
     else:
         print("Dataset is not loaded.")
 
-    # if args.seed > 0:
     random_seed = args.seed
     torch.manual_seed(random_seed)
     torch.cuda.manual_seed(random_seed)
-    torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
+    torch.cuda.manual_seed_all(random_seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     np.random.seed(random_seed)
     random.seed(random_seed)
 
-
-    # cfgs = Config(args)
-    # cfgs_path = cfgs.get_path(mode=args.mode)
-    model_path = os.path.join(args.output_path, args.dataset_name, args.dataset_split, args.output_name)#cfgs_path)
+    model_path = os.path.join(args.output_path, args.dataset_name, args.dataset_split, args.output_name)
     os.makedirs(model_path, exist_ok=True)
-    # cfgs.save_yml_config(cfgs_path)
-    tb_writer = SummaryWriter(os.path.join("logs", model_path))
 
-
-    trainer = SPUBERTTrainer(train_dataloader=train_dataloader, args=args, tb_writer=tb_writer)
+    trainer = SPUBERTTrainer(train_dataloader=train_dataloader, args=args)
     stopper = EarlyStopping(patience=args.patience, ckpt_path=model_path, parallel=trainer.parallel, verbose=True)
-    min_aderror = 10000
-    min_fderror = 10000
-    min_gderror = 10000
     for epoch in range(args.epoch):
-        test_loss = 0
-        val_loss = 0
-        train_loss, params = trainer.train(epoch)
-        tb_writer.add_scalar('loss/train/total', train_loss, epoch)
-        tb_writer.add_scalar('loss/train/kld', params['kld_loss'], epoch)
-        tb_writer.add_scalar('loss/train/gde', params['gde_loss'], epoch)
-        tb_writer.add_scalar('loss/train/mgp_col', params['mgp_col_loss'], epoch)
-        tb_writer.add_scalar('loss/train/ade', params['ade_loss'], epoch)
-        tb_writer.add_scalar('loss/train/fde', params['fde_loss'], epoch)
-        tb_writer.add_scalar('loss/train/tgp_col', params['tgp_col_loss'], epoch)
-        tb_writer.add_scalar('lr/mgp_lr', params['mgp_lr'], epoch)
-        tb_writer.add_scalar('lr/tgp_lr', params['tgp_lr'], epoch)
-        tb_writer.add_scalar('weight/kld', params['kld_weight'], epoch)
-        tb_writer.add_scalar('weight/ade', params['traj_weight'], epoch)
-        tb_writer.add_scalar('weight/gde', params['goal_weight'], epoch)
+        trainer.train(epoch)
 
-        # validation model save
         if args.test and epoch > args.epoch/2:
             aderror, fderror, gderror = trainer.test(epoch, test_dataloader, args.d_sample, args.k_sample)
             print("[TEST] ADE({:.4f}), FDE({:.4f}), GDE({:.4f})".format(aderror, fderror, gderror))
-            # min_aderror = min(min_aderror, aderror)
-            # min_fderror = min(min_fderror, fderror)
-            # min_gderror = min(min_gderror, gderror)
-            # print("min_aderror({:.4f}), min_fderror({:.4f}), min_gderror({:.4f})".format(min_aderror, min_fderror, min_gderror))
-            tb_writer.add_scalar('test/ade', aderror, epoch)
-            tb_writer.add_scalar('test/fde', fderror, epoch)
-            tb_writer.add_scalar('test/gde', gderror, epoch)
             if stopper(aderror, fderror, epoch):
-                if trainer.parallel:
-                    stopper.save_model(model_path, trainer.model.module, model_name="full_model")
-                else:
-                    stopper.save_model(model_path, trainer.model, model_name="full_model")
+                stopper.save_model(model_path, trainer.model, model_name="full_model")
 
             if stopper.early_stop and args.patience != -1:
                 break
-
-    tb_writer.close()
 
 
 if __name__=='__main__':

@@ -8,15 +8,17 @@ MGP consists of Transformer encoder and generative models to predict multiple go
 SPU-BERT can predict socio-physically acceptable multi-trajectory by understanding movements, social interactions, and scene contexts in trajectories and semantic map. In addition, the explainable results give confidence in the socio-physical understanding of SPU-BERT.
 
 
-## Requirements
+
+## Install
 The codes are developed with python 3.6.
 We tested the codes in python 3.6, 3.7, and 3.8.
 Additional packages are included in the `requirements.txt`.
-
 ```bash
+git clone https://github.com/kina4147/SPUBERT
+export PYTHONPATH=$PYTHONPATH:$PWD
+cd SPUBERT
 pip install -r requirements.txt
 ```
-
 
 
 ### Dataset

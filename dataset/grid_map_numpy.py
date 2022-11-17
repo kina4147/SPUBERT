@@ -1,11 +1,3 @@
-"""
-
-Grid map library using numpy
-
-author: Ki-In Na
-
-"""
-
 import matplotlib.pyplot as plt
 import numpy as np
 import math

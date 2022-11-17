@@ -90,7 +90,6 @@ class SPUBERTMMEmbeddings(nn.Module):
             self, spatial_ids=None, temporal_ids=None, segment_ids=None, env_spatial_ids=None, env_temporal_ids=None, env_segment_ids=None, modal_ids=None, inputs_embeds=None,
             past_key_values_length=0
     ):
-        # trajectory + social_interaction + scene (environment)
         spatial_embeddings = self.spatial_embeddings(spatial_ids)
         temporal_embeddings = self.temporal_embeddings(temporal_ids)
         segment_embeddings = self.segment_embeddings(segment_ids)

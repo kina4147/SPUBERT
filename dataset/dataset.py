@@ -1,7 +1,5 @@
 import os
-import copy
 import torch
-import numpy as np
 from torch.utils.data import Dataset
 import tqdm
 from SPUBERT.dataset.util import *
@@ -67,10 +65,6 @@ class SPUBERTDataset(Dataset):
                     nbr_seq = seq[seq[:, 1] == nbr_pid, :]
                     nbr_frames = (nbr_seq[:, 0] - start_frame) // frame_gap
                     nbr_frames = nbr_frames.astype(int)
-                    # if len(nbr_frames[nbr_frames < self.args.obs_len]) < 4:
-                    #     continue
-                    # if max(nbr_frames) > self.seq_len:
-                    #     print(seq, start_frame, nbr_frames, nbr_seq[:, 0], seq[0, 0], seq[-1, 0])
                     trajs[nbr_pidx+1, nbr_frames, :] = nbr_seq[:, 2:4]
                 traj_valid = [False if np.all(np.isnan(traj[:self.args.obs_len, 0])) else True for traj in trajs]
                 trajs = trajs[traj_valid]
@@ -82,46 +76,11 @@ class SPUBERTDataset(Dataset):
         scale = 1.0/self.scales[self.all_scenes[item]]
         if self.args.scene:
             env = copy.deepcopy(self.envs[self.all_scenes[item]])
-        ################################################
-        # fig1, ax1 = plt.subplots()
-        # for idx, traj in enumerate(trajs):
-        #     ax1.scatter(traj[:, 0], traj[:, 1])
-        # if self.args.scene:
-        #     env.plot_grid_map_in_space(ax=ax1)
-        # plt.show()
-        ################################################
         trajs, trans, rot = transform_to_target(trajs=trajs, obs_len=self.args.obs_len, traj_dim=trajs.shape[2])
         if self.args.scene:
             tgt_env = extract_map(env, range=1.5*self.args.env_range, resol=self.args.env_resol, trans=trans, rot=rot)
         else:
             tgt_env = None
-        ################################################
-        # fig2, ax2 = plt.subplots()
-        # if self.args.scene:
-        #     tgt_env.plot_grid_map_in_space(ax=ax2)
-        # for idx, traj in enumerate(trajs):
-        #     if idx == 0:
-        #         ax2.scatter(traj[:, 0], traj[:, 1], c="red", edgecolor='k')
-        #     else:
-        #         ax2.scatter(traj[:, 0], traj[:, 1], edgecolor='k')
-        #     dx = traj[self.args.obs_len - 1, 0] - traj[self.args.obs_len - 2, 0]
-        #     dy = traj[self.args.obs_len - 1, 1] - traj[self.args.obs_len - 2, 1]
-        #     dist = math.sqrt(dx * dx + dy * dy)
-        #     dist_scale = 0.4
-        #     arrow_width = 0.1
-        #     dx = dist_scale * dx / dist
-        #     dy = dist_scale * dy / dist
-        #     ax2.arrow(traj[self.args.obs_len - 1, 0], traj[self.args.obs_len - 1, 1], dx, dy, color='k',
-        #              width=arrow_width, head_width=dist_scale, head_length=dist_scale)
-        #
-        # import matplotlib as mpl
-        # ax2.add_patch(mpl.patches.Wedge((0, 0), r=self.args.view_range, theta1=-self.args.view_angle*90/np.pi, theta2=self.args.view_angle*90/np.pi, alpha=0.5, color='k', fill=False, linestyle='--', zorder=0))
-        # ax2.add_patch(mpl.patches.Circle((0, 0), radius=self.args.social_range, alpha=0.5, color='k', fill=False, linestyle='--', zorder=0))
-        #
-        # ax2.set_xlim([-self.args.view_range, self.args.view_range])
-        # ax2.set_ylim([-self.args.view_range, self.args.view_range])
-        # plt.show()
-        ################################################
         if self.split == 'train':
             trajs = aug_random_scale(trajs)
             trajs = neighbor_filtering(trajs, num_nbr=self.args.num_nbr, obs_len=self.args.obs_len, pred_len=self.args.pred_len,
@@ -136,32 +95,6 @@ class SPUBERTDataset(Dataset):
 
         if self.args.scene:
             tgt_env = extract_map(tgt_env, range=self.args.env_range, resol=self.args.env_resol)
-
-
-        #################################################
-        # fig3, ax3 = plt.subplots()
-        # if self.args.scene:
-        #     tgt_env.plot_grid_map_in_space(ax=ax3)
-        # for idx, traj in enumerate(trajs):
-        #     if idx == 0:
-        #         ax3.scatter(traj[:, 0], traj[:, 1], c="red", edgecolor='k')
-        #     else:
-        #         ax3.scatter(traj[:, 0], traj[:, 1], edgecolor='k')
-        #     dx = traj[self.args.obs_len - 1, 0] - traj[self.args.obs_len - 2, 0]
-        #     dy = traj[self.args.obs_len - 1, 1] - traj[self.args.obs_len - 2, 1]
-        #     dist = math.sqrt(dx * dx + dy * dy)
-        #     dist_scale = 0.4
-        #     arrow_width = 0.1
-        #     dx = dist_scale * dx / dist
-        #     dy = dist_scale * dy / dist
-        #     ax3.arrow(traj[self.args.obs_len - 1, 0], traj[self.args.obs_len - 1, 1], dx, dy, color='k',
-        #              width=arrow_width, head_width=dist_scale, head_length=dist_scale)
-        # ax3.add_patch(mpl.patches.Wedge((0, 0), r=self.args.view_range, theta1=-self.args.view_angle*90/np.pi, theta2=self.args.view_angle*90/np.pi, alpha=0.5, color='k', fill=False, linestyle='--', zorder=0))
-        # ax3.add_patch(mpl.patches.Circle((0, 0), radius=self.args.social_range, alpha=0.5, color='k', fill=False, linestyle='--', zorder=0))
-        #
-        # ax3.set_xlim([-self.args.view_range, self.args.view_range])
-        # ax3.set_ylim([-self.args.view_range, self.args.view_range])
-        # plt.show()
 
         trajs[1:, self.args.obs_len:, :] = np.nan
         tgt_pred_traj = copy.deepcopy(trajs[0, self.args.obs_len:])
@@ -203,9 +136,9 @@ class SPUBERTDataset(Dataset):
             attn_mask += [self.i_ind.true_val] + nbr_attn_mask.tolist()
         # collate
         ext_len = self.seq_input_len - len(spatial_ids) - len(mgp_spatial_ids)
-        spatial_ids_padding = [self.s_ind.pad_id] * ext_len # [self.s_ind.pad_id for _ in range(ext_len)]
+        spatial_ids_padding = [self.s_ind.pad_id] * ext_len
         spatial_ids.extend(spatial_ids_padding)
-        integer_ids_padding = [self.i_ind.pad_id] * ext_len # [self.i_ind.pad_id for _ in range(ext_len)]
+        integer_ids_padding = [self.i_ind.pad_id] * ext_len
         segment_ids.extend(integer_ids_padding), temporal_ids.extend(integer_ids_padding), attn_mask.extend(integer_ids_padding)
         mgp_spatial_ids += spatial_ids
         mgp_segment_ids += segment_ids
@@ -215,14 +148,8 @@ class SPUBERTDataset(Dataset):
         tgp_segment_ids += segment_ids
         tgp_temporal_ids += temporal_ids
         tgp_attn_mask += attn_mask
-        # fig4, ax4 = plt.subplots()
-        # tgt_env.plot_grid_map_in_space(ax=ax4)
-        # for idx, traj in enumerate(trajs):
-        #     ax4.scatter(traj[:, 0], traj[:, 1])
-        # env patch (patch cell size) even number
-        # plt.show()
         if self.args.scene:
-            if tgt_env.width % self.args.patch_size != 0: # add padding
+            if tgt_env.width % self.args.patch_size != 0:
                 pad_size = self.args.patch_size - (tgt_env.width % self.args.patch_size) // 2
                 tgt_env = expand_map_with_pad(tgt_env, 0, pad_size)
 

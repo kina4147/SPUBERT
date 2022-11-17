@@ -1,52 +1,5 @@
-import torch
 from torch import nn
 from transformers.activations import ACT2FN
-
-class SIPPooler(nn.Module):
-    def __init__(self, obs_len=8, pred_len=12, num_nbr=4):
-        super().__init__()
-        self.obs_len = obs_len
-        self.pred_len = pred_len
-        self.seq_input_len = (obs_len+1) * (num_nbr+1) + pred_len
-        self.pool_ids = torch.zeros(self.seq_input_len, dtype=bool)
-        self.pool_ids[(self.obs_len+self.pred_len+1)::(self.obs_len+1)] = True
-
-    def forward(self, x):
-        x = x[:, :self.seq_input_len, :]
-        x = x[:, self.pool_ids, :]
-        return x
-
-
-class MTPPooler(nn.Module):
-    def __init__(self, obs_len=8, pred_len=12, num_nbr=4):
-        super().__init__()
-        self.obs_len = obs_len
-        self.pred_len = pred_len
-        self.seq_input_len = (obs_len+1) * (num_nbr+1) + pred_len
-        self.pool_ids = torch.ones(self.seq_input_len, dtype=bool)
-        self.pool_ids[0] = False
-        self.pool_ids[(self.obs_len+self.pred_len+1)::(self.obs_len+1)] = False
-
-    def forward(self, x):
-        x = x[:, :self.seq_input_len, :]
-        x = x[:, self.pool_ids, :]
-        return x
-
-class PastTrajPooler(nn.Module):
-    def __init__(self, hidden_size, obs_len=8, layer_norm_eps=1e-4, dropout_prob=0.25, act_fn='relu'):
-        super().__init__()
-        self.obs_len = obs_len
-        self.linear = nn.Linear(hidden_size, hidden_size)
-        self.act_fn = ACT2FN[act_fn]
-        # self.LayerNorm = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
-        # self.dropout = nn.Dropout(dropout_prob)
-
-    def forward(self, x):
-        x = x[:, 1:self.obs_len+1, :]
-        x = self.act_fn(self.linear(x))
-        # x = self.LayerNorm(x)
-        # x = self.dropout(x)
-        return x
 
 class FutureTrajPooler(nn.Module):
     def __init__(self, hidden_size, obs_len=8, pred_len=12, layer_norm_eps=1e-4, dropout_prob=0.25, act_fn='relu'):
@@ -65,24 +18,6 @@ class FutureTrajPooler(nn.Module):
         x = self.dropout(x)
         return x
 
-class FullTrajPooler(nn.Module):
-    def __init__(self, hidden_size, obs_len, pred_len, layer_norm_eps=1e-4, dropout_prob=0.25, act_fn='relu'):
-        super().__init__()
-        self.obs_len = obs_len
-        self.pred_len = pred_len
-        self.linear = nn.Linear(hidden_size, hidden_size)
-        self.act_fn = ACT2FN[act_fn]
-        # self.LayerNorm = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
-        # self.dropout = nn.Dropout(dropout_prob)
-
-    def forward(self, x):
-        x = x[:, 1+self.obs_len:1+self.obs_len+self.pred_len, :]
-        x = self.act_fn(self.linear(x))
-        # x = self.LayerNorm(x)
-        # x = self.dropout(x)
-        return x
-
-
 class GoalPooler(nn.Module):
     def __init__(self, hidden_size, obs_len, pred_len, layer_norm_eps=1e-4, dropout_prob=0.25, act_fn='relu'):
         super().__init__()
@@ -100,6 +35,70 @@ class GoalPooler(nn.Module):
         x = self.dropout(x)
         return x
 
+# class SIPPooler(nn.Module):
+#     def __init__(self, obs_len=8, pred_len=12, num_nbr=4):
+#         super().__init__()
+#         self.obs_len = obs_len
+#         self.pred_len = pred_len
+#         self.seq_input_len = (obs_len+1) * (num_nbr+1) + pred_len
+#         self.pool_ids = torch.zeros(self.seq_input_len, dtype=bool)
+#         self.pool_ids[(self.obs_len+self.pred_len+1)::(self.obs_len+1)] = True
+#
+#     def forward(self, x):
+#         x = x[:, :self.seq_input_len, :]
+#         x = x[:, self.pool_ids, :]
+#         return x
+#
+#
+# class MTPPooler(nn.Module):
+#     def __init__(self, obs_len=8, pred_len=12, num_nbr=4):
+#         super().__init__()
+#         self.obs_len = obs_len
+#         self.pred_len = pred_len
+#         self.seq_input_len = (obs_len+1) * (num_nbr+1) + pred_len
+#         self.pool_ids = torch.ones(self.seq_input_len, dtype=bool)
+#         self.pool_ids[0] = False
+#         self.pool_ids[(self.obs_len+self.pred_len+1)::(self.obs_len+1)] = False
+#
+#     def forward(self, x):
+#         x = x[:, :self.seq_input_len, :]
+#         x = x[:, self.pool_ids, :]
+#         return x
+#
+# class PastTrajPooler(nn.Module):
+#     def __init__(self, hidden_size, obs_len=8, layer_norm_eps=1e-4, dropout_prob=0.25, act_fn='relu'):
+#         super().__init__()
+#         self.obs_len = obs_len
+#         self.linear = nn.Linear(hidden_size, hidden_size)
+#         self.act_fn = ACT2FN[act_fn]
+#         # self.LayerNorm = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
+#         # self.dropout = nn.Dropout(dropout_prob)
+#
+#     def forward(self, x):
+#         x = x[:, 1:self.obs_len+1, :]
+#         x = self.act_fn(self.linear(x))
+#         # x = self.LayerNorm(x)
+#         # x = self.dropout(x)
+#         return x
+#
+#
+#
+# class FullTrajPooler(nn.Module):
+#     def __init__(self, hidden_size, obs_len, pred_len, layer_norm_eps=1e-4, dropout_prob=0.25, act_fn='relu'):
+#         super().__init__()
+#         self.obs_len = obs_len
+#         self.pred_len = pred_len
+#         self.linear = nn.Linear(hidden_size, hidden_size)
+#         self.act_fn = ACT2FN[act_fn]
+#         # self.LayerNorm = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
+#         # self.dropout = nn.Dropout(dropout_prob)
+#
+#     def forward(self, x):
+#         x = x[:, 1+self.obs_len:1+self.obs_len+self.pred_len, :]
+#         x = self.act_fn(self.linear(x))
+#         # x = self.LayerNorm(x)
+#         # x = self.dropout(x)
+#         return x
 # class SBertTargetTrajFineTuningPooler(nn.Module):
 #     def __init__(self, config):
 #         super().__init__()
