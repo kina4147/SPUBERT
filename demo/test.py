@@ -12,8 +12,6 @@ from SPUBERT.model.spubert import (
 )
 from SPUBERT.model.loss import bom_loss
 from SPUBERT.dataset.grid_map_numpy import estimate_map_length, estimate_num_patch
-from SPUBERT.util.viz import *
-
 
 def test():
 
