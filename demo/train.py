@@ -1,11 +1,9 @@
 import argparse
 import os
-import copy
 import numpy as np
 import random
 import torch
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
 
 from SPUBERT.dataset.ethucy import ETHUCYDataset
 from SPUBERT.dataset.sdd import SDDDataset

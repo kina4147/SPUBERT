@@ -11,8 +11,6 @@ from SPUBERT.model.spubert import (
 from SPUBERT.dataset.grid_map_numpy import estimate_map_length, estimate_num_patch
 from SPUBERT.model.loss import bom_loss
 transformers.logging.set_verbosity_info()
-
-# from SPUBERT.util.viz import *
 torch.autograd.set_detect_anomaly(True)
 
 class SPUBERTTrainer(object):
