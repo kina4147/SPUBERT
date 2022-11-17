@@ -64,17 +64,14 @@ def test():
     parser.add_argument("--seed", type=int, default=80819, help="embedding size")
 
     args = parser.parse_args()
-    test_args = copy.copy(args)
-    test_args.aug = False
-    test_dataloader = None
     if args.dataset_name == 'ethucy':
         print("ETH/UCY Dataset Loading...")
-        test_dataset = ETHUCYDataset(split="test", args=test_args)
+        test_dataset = ETHUCYDataset(split="test", args=args)
         test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=args.num_worker, shuffle=False)
     elif args.dataset_name == 'sdd':
         print("SDD Dataset Loading...")
         args.dataset_split = 'default'
-        test_dataset = SDDDataset(split="test", args=test_args)
+        test_dataset = SDDDataset(split="test", args=args)
         test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=args.num_worker, shuffle=False)
     else:
         print("Dataset is not loaded.")
