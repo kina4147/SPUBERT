@@ -46,7 +46,6 @@ def train():
     parser.add_argument("--env_resol", type=float, default=0.2, help="physically-aware resolution")
     parser.add_argument("--patch_size", type=int, default=16, help="physically-aware patch size for ViT")
     parser.add_argument('--scene', action='store_true', help='physically-aware, true, or false ')
-    parser.add_argument('--binary_scene', action='store_true', help='augment scenes')
 
     # Ablation Setting Parameters
     parser.add_argument("--hidden", type=int, default=256, help="hidden size of transformer model")
@@ -54,13 +53,6 @@ def train():
     parser.add_argument("--head", type=int, default=4, help="number of attention heads")
     parser.add_argument("--goal_hidden", type=int, default=64, help="hidden size of transformer model")
     parser.add_argument("--goal_latent", type=int, default=32, help="hidden size of transformer model")
-    parser.add_argument('--act_fn', default='relu', help='glob expression for data files')
-
-    # Hyperparameters
-    parser.add_argument("--traj_weight", type=float, default=1.0, help="learning rate of adam")
-    parser.add_argument("--goal_weight", type=float, default=1.0, help="learning rate of adam")
-    parser.add_argument("--kld_weight", type=float, default=1.0, help="learning rate of adam")
-
 
     # Embedding & Loss Parameters
     parser.add_argument("--k_sample", type=int, default=20, help="embedding size")
@@ -70,7 +62,6 @@ def train():
     parser.add_argument('--test', action='store_true', default=True, help='augment scenes')
     parser.add_argument("--seed", type=int, default=80819, help="embedding size")
 
-    parser.add_argument('--clip_grads', action='store_true', default=True, help='augment scenes')
     parser.add_argument("--patience", type=int, default=-1, help="patience for early stopping")
     args = parser.parse_args()
 

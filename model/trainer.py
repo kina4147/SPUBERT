@@ -160,8 +160,7 @@ class SPUBERTTrainer(object):
             total_tgp_loss += outputs["tgp_loss"].mean().item()
             mgp_loss.backward()
             tgp_loss.backward()
-            if self.args.clip_grads:
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             self.mgp_optim.step()
             self.tgp_optim.step()
             self.mgp_lr_scheduler.step()

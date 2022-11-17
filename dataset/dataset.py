@@ -153,17 +153,7 @@ class SPUBERTDataset(Dataset):
                 pad_size = self.args.patch_size - (tgt_env.width % self.args.patch_size) // 2
                 tgt_env = expand_map_with_pad(tgt_env, 0, pad_size)
 
-            if self.args.binary_scene is True:
-                if "ethucy" in self.args.dataset_name:
-                    binary = 1
-                elif "sdd" in self.args.dataset_name:
-                    binary = 2
-                else:
-                    assert True
-            else:
-                binary = None
-
-            env_spatial_ids, env_attn_mask  = extract_patch_from_map(tgt_env, self.args.patch_size, binary=binary)
+            env_spatial_ids, env_attn_mask  = extract_patch_from_map(tgt_env, self.args.patch_size)
             env_segment_ids = np.arange(start=self.args.num_nbr+1, stop=self.args.num_nbr+len(env_spatial_ids)+1)
             env_temporal_ids = np.ones(len(env_spatial_ids)) * self.args.obs_len
             envs_params = [tgt_env.min_x, tgt_env.min_y, tgt_env.width, tgt_env.height, tgt_env.resolution, 2]

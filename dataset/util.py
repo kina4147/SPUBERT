@@ -31,7 +31,7 @@ def shift_trajs(trajs, center):
     return trajs
 
 
-def extract_patch_from_map(src_map, patch_size, init_val=0, binary=None):
+def extract_patch_from_map(src_map, patch_size, init_val=0):
     num_width_patch = src_map.width // patch_size
     num_height_patch = src_map.height // patch_size
     patches = []
@@ -42,16 +42,11 @@ def extract_patch_from_map(src_map, patch_size, init_val=0, binary=None):
             patch = src_map.grid_map[i*patch_size:(i+1)*patch_size, j*patch_size:(j+1)*patch_size]
             if np.all(patch == init_val):
                 attn_mask[pidx] = 0
-            if binary is not None:
-                tmp_patch = copy.deepcopy(patch)
-                patch[(tmp_patch != init_val) & (tmp_patch <= binary)] = 1
-                patch[tmp_patch > binary] = 2
             patches.append(patch.flatten())
             pidx += 1
 
     return patches, attn_mask
 
-#
 def convert_patches_to_map(patches, patch_size, resol=0.1):
     num_patch, patch_len = patches.shape
     num_side_patch = np.sqrt(num_patch)
