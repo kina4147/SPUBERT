@@ -79,12 +79,12 @@ def test():
     if args.dataset_name == 'ethucy':
         print("ETH/UCY Dataset Loading...")
         test_dataset = ETHUCYDataset(split="test", args=test_args)
-        test_dataloader = DataLoader(test_dataset, batch_size=args.test_batch_size, num_workers=args.num_worker, shuffle=args.shuffle)
+        test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=args.num_worker, shuffle=args.shuffle)
     elif args.dataset_name == 'sdd':
         print("SDD Dataset Loading...")
         args.dataset_split = 'default'
         test_dataset = SDDDataset(split="test", args=test_args)
-        test_dataloader = DataLoader(test_dataset, batch_size=args.test_batch_size, num_workers=args.num_worker, shuffle=args.shuffle)
+        test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=args.num_worker, shuffle=args.shuffle)
     else:
         print("Dataset is not loaded.")
 
