@@ -95,7 +95,7 @@ def train():
     for epoch in range(args.epoch):
         trainer.train(epoch)
 
-        if epoch >= 0:#args.epoch/2:
+        if epoch > args.epoch/2:
             aderror, fderror, gderror = trainer.test(epoch, test_dataloader, args.d_sample, args.k_sample)
             print("[TEST] ADE({:.4f}), FDE({:.4f}), GDE({:.4f})".format(aderror, fderror, gderror))
             if stopper(aderror, fderror, epoch):
