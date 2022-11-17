@@ -79,7 +79,7 @@ class SPUBERTMMEmbeddings(nn.Module):
         self.segment_embeddings = SegmentEmbedding(segment_size=cfgs.num_nbr + cfgs.num_patch + 1, embedding_dim=cfgs.hidden_size,
                                                    padding_idx=cfgs.pad_token_id)
 
-        self.modal_embeddings = ModalEmbedding(modal_size=2, embedding_dim=cfgs.hidden_size)
+        # self.modal_embeddings = ModalEmbedding(modal_size=2, embedding_dim=cfgs.hidden_size)
         self.env_spatial_embeddings = GridMapEmbeddings(width=cfgs.patch_size, height=cfgs.patch_size, embedding_dim=cfgs.hidden_size, act_fn=cfgs.act_fn)
 
         self.LayerNorm = nn.LayerNorm(cfgs.hidden_size, eps=cfgs.layer_norm_eps)
@@ -94,15 +94,15 @@ class SPUBERTMMEmbeddings(nn.Module):
         temporal_embeddings = self.temporal_embeddings(temporal_ids)
         segment_embeddings = self.segment_embeddings(segment_ids)
         modal_ids = torch.zeros_like(segment_ids)
-        modal_embeddings = self.modal_embeddings(modal_ids)
-        trajectory_embeddings = spatial_embeddings + temporal_embeddings + segment_embeddings + modal_embeddings
+        # modal_embeddings = self.modal_embeddings(modal_ids)
+        trajectory_embeddings = spatial_embeddings + temporal_embeddings + segment_embeddings# + modal_embeddings
 
         env_spatial_embeddings = self.env_spatial_embeddings(env_spatial_ids)
         env_temporal_embeddings = self.temporal_embeddings(env_temporal_ids)
         env_segment_embeddings = self.segment_embeddings(env_segment_ids)
         env_modal_ids = torch.ones_like(env_segment_ids)
-        env_modal_embeddings = self.modal_embeddings(env_modal_ids)
-        scene_embeddings = env_spatial_embeddings + env_temporal_embeddings + env_segment_embeddings + env_modal_embeddings
+        # env_modal_embeddings = self.modal_embeddings(env_modal_ids)
+        scene_embeddings = env_spatial_embeddings + env_temporal_embeddings + env_segment_embeddings# + env_modal_embeddings
         total_embeddings = torch.cat([trajectory_embeddings, scene_embeddings], dim=1)
 
         total_embeddings = self.LayerNorm(total_embeddings)
