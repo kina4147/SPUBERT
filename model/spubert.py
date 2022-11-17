@@ -31,7 +31,7 @@ class SPUBERTTGPConfig:
             scene=False,
             num_patch=32,
             patch_size=32,
-            traj_weight=1.0,
+            # traj_weight=1.0,
             pad_token_id=0,
             layer_norm_eps=1e-12,
             initializer_range=0.02,
@@ -52,7 +52,7 @@ class SPUBERTTGPConfig:
         self.obs_len = obs_len
         self.pred_len = pred_len
         self.num_nbr = num_nbr
-        self.traj_weight = traj_weight
+        # self.traj_weight = traj_weight
         self.scene = scene
         self.num_patch = num_patch
         self.patch_size = patch_size
@@ -86,8 +86,8 @@ class SPUBERTMGPConfig:
             k_sample=20,
             goal_hidden_size=64,
             goal_latent_size=64,
-            kld_weight=1.0,
-            goal_weight=1.0,
+            # kld_weight=1.0,
+            # goal_weight=1.0,
             cvae_sigma=1.0,
             kld_clamp=None,
     ):
@@ -121,8 +121,8 @@ class SPUBERTMGPConfig:
         self.k_sample = k_sample
         self.goal_hidden_size = goal_hidden_size
         self.goal_latent_size = goal_latent_size
-        self.kld_weight = kld_weight
-        self.goal_weight = goal_weight
+        # self.kld_weight = kld_weight
+        # self.goal_weight = goal_weight
 
         self.cvae_sigma = cvae_sigma
         self.kld_clamp = kld_clamp
@@ -217,11 +217,11 @@ class SPUBERTConfig:
         self.k_sample = goal_cfgs.k_sample
         self.goal_hidden_size = goal_cfgs.goal_hidden_size
         self.goal_latent_size = goal_cfgs.goal_latent_size
-        self.kld_weight = goal_cfgs.kld_weight
-        self.cvae_sigma = goal_cfgs.cvae_sigma
+        # self.kld_weight = goal_cfgs.kld_weight
+        # self.cvae_sigma = goal_cfgs.cvae_sigma
         self.kld_clamp = goal_cfgs.kld_clamp
-        self.traj_weight = traj_cfgs.traj_weight
-        self.goal_weight = goal_cfgs.goal_weight
+        # self.traj_weight = traj_cfgs.traj_weight
+        # self.goal_weight = goal_cfgs.goal_weight
         self.num_traj_layer = traj_cfgs.num_layer
         self.num_traj_head = traj_cfgs.num_head
         self.num_goal_layer = goal_cfgs.num_layer
@@ -333,8 +333,8 @@ class SPUBERTTGPModel(SPUBERTModelBase):
         loss_fde = FDELoss()
         ade_loss = loss_ade(pred_trajs, traj_lbl)
         fde_loss = loss_fde(pred_trajs[:, -1], goal_lbl)
-        ade_loss = self.cfgs.traj_weight * ade_loss
-        fde_loss = self.cfgs.traj_weight * fde_loss
+        ade_loss = ade_loss
+        fde_loss = fde_loss
         total_loss = ade_loss
 
 
@@ -486,7 +486,7 @@ class SPUBERTMGPModel(SPUBERTModelBase):
             envs=None,
             envs_params=None,
             output_attentions=False,
-            kld_weight=None,
+            # kld_weight=None,
     ):
         goal_enc_out = self.sbert(
             spatial_ids=spatial_ids, segment_ids=segment_ids, temporal_ids=temporal_ids, attn_mask=attn_mask,
@@ -499,8 +499,8 @@ class SPUBERTMGPModel(SPUBERTModelBase):
 
         mgp_cvae_loss = MGPCVAELoss()
         gde_loss, best_idx = mgp_cvae_loss(pred_goals, goal_lbl, self.cfgs.k_sample, output_dim=self.cfgs.output_dim, best=True)
-        kld_loss = kld_weight * kld_loss
-        gde_loss = self.cfgs.goal_weight * gde_loss
+        kld_loss = kld_loss
+        gde_loss = gde_loss
         total_loss = kld_loss + gde_loss
 
 
@@ -631,15 +631,12 @@ class SPUBERTModel(SPUBERTModelBase):
             envs=None,
             envs_params=None,
             output_attentions=False,
-            kld_weight=1.0,
-            traj_weight=1.0,
-            goal_weight=1.0,
     ):
         mgp_out = self.mgp_model(
             spatial_ids=mgp_spatial_ids, segment_ids=mgp_segment_ids, temporal_ids=mgp_temporal_ids, attn_mask=mgp_attn_mask,
             env_spatial_ids=env_spatial_ids, env_temporal_ids=env_temporal_ids, env_segment_ids=env_segment_ids,
             env_attn_mask=env_attn_mask, envs=envs, envs_params=envs_params,
-            traj_lbl=traj_lbl, goal_lbl=goal_lbl, output_attentions=output_attentions, kld_weight=kld_weight)
+            traj_lbl=traj_lbl, goal_lbl=goal_lbl, output_attentions=output_attentions)
 
         tgp_out = self.tgp_model(
             spatial_ids=tgp_spatial_ids, segment_ids=tgp_segment_ids, temporal_ids=tgp_temporal_ids, attn_mask=tgp_attn_mask,

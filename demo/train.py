@@ -96,7 +96,7 @@ def train():
     os.makedirs(model_path, exist_ok=True)
 
     trainer = SPUBERTTrainer(train_dataloader=train_dataloader, args=args)
-    stopper = EarlyStopping(patience=args.patience, ckpt_path=model_path, parallel=trainer.parallel, verbose=True)
+    stopper = EarlyStopping(patience=args.patience, ckpt_path=model_path, verbose=True)
     for epoch in range(args.epoch):
         trainer.train(epoch)
 

@@ -66,7 +66,6 @@ class ETHUCYDataset(SPUBERTDataset):
                         tmp_curr_trajs[0] = tmp_curr_trajs[idx]
                         tmp_curr_trajs[idx] = tmp_curr_tgt_traj
                         if is_target_outbound(tmp_curr_trajs[0], self.args.obs_len, traj_bound=self.args.view_range):
-                            print("Target is outbound.")
                             continue
                         self.all_trajs.append(tmp_curr_trajs)
                         self.all_scenes.append(scene_id)

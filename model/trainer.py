@@ -12,7 +12,7 @@ from SPUBERT.dataset.grid_map_numpy import estimate_map_length, estimate_num_pat
 from SPUBERT.model.loss import bom_loss
 transformers.logging.set_verbosity_info()
 
-from SPUBERT.util.viz import *
+# from SPUBERT.util.viz import *
 torch.autograd.set_detect_anomaly(True)
 
 class SPUBERTTrainer(object):
@@ -49,9 +49,6 @@ class SPUBERTTrainer(object):
         self.tgp_lr_scheduler = transformers.get_scheduler("linear", optimizer=self.tgp_optim,
                                                        num_warmup_steps=args.warm_up,
                                                        num_training_steps=args.epoch * len(self.train_dataloader))
-        self.kld_weight = args.kld_weight
-        self.traj_weight = args.traj_weight
-        self.goal_weight = args.goal_weight
 
     def test(self, epoch, data_loader, d_sample, k_sample):
         self.model.eval()
@@ -137,16 +134,14 @@ class SPUBERTTrainer(object):
                                      env_temporal_ids=data["env_temporal_ids"],
                                      env_segment_ids=data["env_segment_ids"], env_attn_mask=data["env_attn_mask"],
                                      traj_lbl=data["traj_lbl"], goal_lbl=data["goal_lbl"], envs=data["envs"],
-                                     envs_params=data["envs_params"], kld_weight=self.kld_weight,
-                                     traj_weight=self.traj_weight, goal_weight=self.goal_weight)
+                                     envs_params=data["envs_params"])
             else:
                 outputs = self.model(mgp_spatial_ids=data["mgp_spatial_ids"],
                                      mgp_temporal_ids=data["mgp_temporal_ids"],
                                      mgp_segment_ids=data["mgp_segment_ids"], mgp_attn_mask=data["mgp_attn_mask"],
                                      tgp_spatial_ids=data["tgp_spatial_ids"], tgp_temporal_ids=data["tgp_temporal_ids"],
                                      tgp_segment_ids=data["tgp_segment_ids"], tgp_attn_mask=data["tgp_attn_mask"],
-                                     traj_lbl=data["traj_lbl"], goal_lbl=data["goal_lbl"], kld_weight=self.kld_weight,
-                                     traj_weight=self.traj_weight, goal_weight=self.goal_weight)
+                                     traj_lbl=data["traj_lbl"], goal_lbl=data["goal_lbl"])
 
             mgp_loss = outputs["mgp_loss"].mean()
             tgp_loss = outputs["tgp_loss"].mean()
@@ -169,15 +164,8 @@ class SPUBERTTrainer(object):
         total_gde_loss = total_gde_loss / len(data_iter)
         total_mgp_loss = total_mgp_loss / len(data_iter)
         total_tgp_loss = total_tgp_loss / len(data_iter)
-        total_loss = total_mgp_loss + total_tgp_loss
-        print("[MGP] total_mgp=%f, kld=%f, gde=%f, col=%f" % (total_mgp_loss, total_kld_loss, total_gde_loss, total_mgp_col_loss))
-        print("[TGP] total_tgp=%f, ade=%f, fde=%f, col=%f" % (total_tgp_loss, total_ade_loss, total_fde_loss, total_tgp_col_loss))
-        params = {"total_loss": total_loss,
-                  "traj_weight": self.traj_weight, "goal_weight": self.goal_weight, "kld_weight": self.kld_weight,
-                  "kld_loss": total_kld_loss, "gde_loss": total_gde_loss, "mgp_col_loss": total_mgp_col_loss,
-                  "ade_loss": total_ade_loss, "fde_loss": total_fde_loss, "tgp_col_loss": total_tgp_col_loss,
-                  "mgp_lr": self.mgp_optim.param_groups[0]['lr'], "tgp_lr": self.tgp_optim.param_groups[0]['lr']}
-        return total_loss, params
+        print("[MGP] total_mgp=%f, kld=%f, gde=%f" % (total_mgp_loss, total_kld_loss, total_gde_loss))
+        print("[TGP] total_tgp=%f, ade=%f, fde=%f" % (total_tgp_loss, total_ade_loss, total_fde_loss))
 
     def step_lr_scheduler(self, loss):
         if self.args.lr_scheduler == 'loss':
