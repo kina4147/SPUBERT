@@ -1,9 +1,3 @@
-'''
-NOTE: May 6
-Adopt the Trajectron dataset to make experiment easier
-
-TODO: convert to our own dataset format later
-'''
 import os
 import cv2
 import yaml
@@ -23,7 +17,6 @@ class SDDDataset(SPUBERTDataset):
         df_data.head()
         self.env = {}
         self.min_obs_len = 2 if self.split == 'train' else self.args.obs_len
-
 
         with open(os.path.join(self.path, 'scales.yml'), 'r') as f:
             self.scales = yaml.load(f, Loader=yaml.FullLoader)

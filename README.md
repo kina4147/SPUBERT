@@ -41,83 +41,78 @@ Download datasets([data.zip](https://drive.google.com/file/d/1F80d4mEM9XXIJyaNhb
 - `--dataset_name`, type=`str`: The name of dataset among `ethucy` and `sdd`.
 - `--dataset_split`, type=`str`: The split of dataset among `eth`, `hotel`, `univ`, `zara1`, and `zara2` for ETH/UCY dataset.
 - `--output_name`, type=`str`: The name of output model 
-- `--hidden`, type=`int`: The size of hidden state.
-- `--layer`, type=`int`: The number of layers in Transformer encoders of MGP and TGP. 
-- `--head`, type=`int`: The number of heads in Transformer encoders of MGP and TGP. 
-- `--num_nbr`, type=`int`: The maximum number of neighbor pedestrians.
-- `--view_angle`, type=`float`: The view angle to consider social interaction at the current frame.
-- `--social_range`, type=`float`: The social range to consider social interaction at the current frame. 
-- `--view_range`, type=`float`: The trajectory boundary range to filter out unnecessary trajectory positions.
+- `--hidden`, type=`int`, default=`256`: The size of hidden state.
+- `--layer`, type=`int`, default=`4`: The number of layers in Transformer encoders of MGP and TGP. 
+- `--head`, type=`int`, default=`4`: The number of heads in Transformer encoders of MGP and TGP. 
+- `--num_nbr`, type=`int`, default=`4`: The maximum number of neighbor pedestrians.
+- `--view_angle`, type=`float`, default=`2.09`: The view angle to consider social interaction at the current frame.
+- `--social_range`, type=`float`, default=`2`: The social range to consider social interaction at the current frame. 
+- `--view_range`, type=`float`, default=`20`: The trajectory boundary range to filter out unnecessary trajectory positions.
 - `--scene`, type=`bool`: The consideration of scene interaction 
-- `--env_range`, type=`float`: The range of semantic map. 
-- `--env_resol`, type=`float`: The resolution of semantic map.
-- `--patch_size`, type=`int`: The size of patch for semantic map embedding.
-- `--d_sample`, type=`int`: The number of goal intention samples.
+- `--env_range`, type=`float`, default=`10`: The range of semantic map. 
+- `--env_resol`, type=`float`, default=`0.2`: The resolution of semantic map.
+- `--patch_size`, type=`int`, default=`16`: The size of patch for semantic map embedding.
+- `--d_sample`, type=`int`, default=`1000`: The number of goal intention samples.
 
 ## Training
+To train SPU-BERT, 
 ```bash
 python -m demo.train  (--cuda) --dataset_name DATASET_NAME --dataset_split DATASET_SPLIT \
                        --output_name MODEL_NAME --d_sample NUM_GIS --num_nbr NUM_NEIGHBOR --scene 
 ```
-For ETH/UCY dataset, `DATASET_SPLIT` can be `eth`, `hotel`, `univ`, `zara1`, `zara2`.
-
+For ETH/UCY dataset, `DATASET_SPLIT` can be `eth`, `hotel`, `univ`, `zara1`, `zara2`. 
 For SDD, `DATASET_SPLIT` can be `default`. `--dataset_split` can be omitted because `default` is automatically set when `--dataset_name` is `sdd`.
-
 The detailed description of arguments are explained in Argument below.
+The trained model is save in `SPUBERT/output/DATASET_NAME/DATASET_SPLIT/MODEL_NAME.pth`.
 
 ## Evaluation
-
+To test the trained SPU-BERT,
 ```bash
-python -m demo.test  (--cuda) --dataset_name DATASET_NAME --dataset_split DATASET_SPLIT \
+python -m demo.test (--cuda) --dataset_name DATASET_NAME --dataset_split DATASET_SPLIT \
                       --output_name MODEL_NAME --d_sample NUM_GIS --num_nbr NUM_NEIGHBOR --scene
 ```
-
+All the arguments in the test should be same with the arguments of the trained model (`MODEL_NAME.pth`) in the training.
 
 ## Pre-Trained Models
-Download the pretrained model([output.zip](https://drive.google.com/file/d/1F80d4mEM9XXIJyaNhbBX9CSXDSDx-3Cy/view?usp=share_link)) 
+We uploaded the pretrained models described in the paper: SPU-BERT (H=256, L=4, A=4, D=1000), SPU-BERT<sub>*A*</sub> (H=256, L=4, A=8, D=5000), and SPU-BERT<sub>*HA*</sub> (H=512, L=4, A=8, D=5000).
+Download the pretrained models ([output.zip](https://drive.google.com/file/d/1F80d4mEM9XXIJyaNhbBX9CSXDSDx-3Cy/view?usp=share_link)) and extract them as
 
-The pretrained models are distinguished by the name of directory and the files have the same name `full_model.pth`.
-If the datasets (`--dataset_name`) and splits (`--dataset_split`) are configured, the pretrained model path are automatically generated without the last directory.
-Therefore, by configuring the output name (`--output_name`), the different pretrained models can be loaded and evaluated.
-For example, 
-```bash
---dataset_name ethucy --dataset_split eth --hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene 
-```
-`--output_name` is set as `h256l4a4_nbr4_scnO_d1000`.
+
 ```bash
     └── output               
          ├── ethucy 
-         │    ├── eth ── h256l4a4_nbr4_scnO_d1000 ── full_model.pth
-         │    ├── hotel
-         │    ├── univ
-         │    ├── zara1
-         │    └── zara2
+         │    ├── eth ── spubert.pth / spubert_a.pth / spubert_ha.pth
+         │    ├── hotel ── spubert.pth / spubert_a.pth / spubert_ha.pth
+         │    ├── univ ── spubert.pth / spubert_a.pth / spubert_ha.pth
+         │    ├── zara1 ── spubert.pth / spubert_a.pth / spubert_ha.pth
+         │    └── zara2 ── spubert.pth / spubert_a.pth / spubert_ha.pth
          └── sdd   
-              └── default          
+              └── default ── spubert.pth / spubert_a.pth / spubert_ha.pth        
     
 ```  
-We provide various pretrained models with different settings as below.
-- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
-- `h256l4a8_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
-- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
-- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
-- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
-- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
-- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
-- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
-- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
-- `h256l4a4_nbr4_scnO_d1000`: `--hidden 256 --layer 4 --head 4 --d_sample 1000  --num_nbr 4 --scene`
-
-
-
-
+To test SPU-BERT on the ETH-Hotel of ETH/UCY datasets, 
+```bash
+python -m demo.test (--cuda) --dataset_name ethucy --dataset_split hotel \
+                     --hidden 256 --layer 4 --head 4 \
+                     --d_sample 1000  --num_nbr 4 --scene --output_name spubert
+```
+To test SPU-BERT<sub>*A*</sub> on the UCY-Zara1 of ETH/UCY datasets, 
+```bash
+python -m demo.test (--cuda) --dataset_name ethucy --dataset_split zara1 \
+                     --hidden 256 --layer 4 --head 8 \
+                     --d_sample 5000  --num_nbr 4 --scene --output_name spubert_a
+```
+To test SPU-BERT<sub>*HA*</sub> on the SDD, 
+```bash
+python -m demo.test (--cuda) --dataset_name sdd \
+                     --hidden 512 --layer 4 --head 8 \
+                     --d_sample 5000  --num_nbr 4 --scene --output_name spubert_ha
+```
 
 
 ## Thanks
-
-Transformers used in this model comes from [HugginFace](https://huggingface.co/).
-
-ETH/UCY Dataset and SDD come from [Y-Net](https://github.com/HarshayuGirase/Human-Path-Prediction).  
+- Transformers used in this model comes from [HugginFace](https://huggingface.co/).
+- ETH/UCY Dataset and SDD come from [Y-Net](https://github.com/HarshayuGirase/Human-Path-Prediction).  
 
 
 ## Citation  

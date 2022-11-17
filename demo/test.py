@@ -15,54 +15,33 @@ from SPUBERT.model.loss import bom_loss
 from SPUBERT.dataset.grid_map_numpy import estimate_map_length, estimate_num_patch
 
 def test():
-
     parser = argparse.ArgumentParser()
-
-    # System Parameters
     parser.add_argument('--dataset_path', default='./data', help='dataset path')
-    parser.add_argument('--dataset_name', default='ethucy', help='dataset name (eth, sdd)')
-    parser.add_argument("--dataset_split", default='univ', help='dataset split (eth-eth, hotel, univ, zara1, zara2')
-    parser.add_argument('--output_path', default='./output', help='glob expression for data files')
-    parser.add_argument('--output_name', default='test', help='glob expression for data files')
-    parser.add_argument("--cuda", action='store_true', help="training with CUDA: true, or false")
-
-    # Training Parameters
-    # parser.add_argument("--lr", type=float, default=1e-4, help="learning rate of adam")
-    # parser.add_argument("--dropout_prob", type=float, default=0.1, help="learning rate of adam")
-    # parser.add_argument('--warm_up', default=1000, type=float, help='sample ratio of train/val scenes')
-    # parser.add_argument("--epoch", type=int, default=200, help="number of epochs")
-    # parser.add_argument("--patience", type=int, default=-1, help="patience for early stopping")
-    # parser.add_argument('--clip_grads', action='store_true', default=True, help='augment scenes')
-
-    parser.add_argument("--batch_size", type=int, default=32, help="number of batch_size")
+    parser.add_argument('--dataset_name', default='ethucy', help='dataset name (ethucy, sdd)')
+    parser.add_argument("--dataset_split", default='univ', help='dataset split for ethucy dataset(eth, hotel, univ, zara1, zara2')
+    parser.add_argument('--output_path', default='./output', help='output path')
+    parser.add_argument('--output_name', default='test', help='output model name')
+    parser.add_argument("--cuda", action='store_true', help="training with CUDA")
+    parser.add_argument("--batch_size", type=int, default=32, help="batch size")
     parser.add_argument("--num_worker", type=int, default=8, help="dataloader worker size")
-    # Model Paramters
     parser.add_argument("--obs_len", type=int, default=8, help="number of observation frames")
     parser.add_argument("--pred_len", type=int, default=12, help="number of prediction frames")
     parser.add_argument("--num_nbr", type=int, default=4, help="number of neighbors")
-    parser.add_argument("--view_range", type=float, default=20.0, help="accessible range of target pedestrian")
-    parser.add_argument("--view_angle", type=float, default=2.09, help="accessible range of target pedestrian")
+    parser.add_argument("--view_range", type=float, default=20.0, help="accessible range boundary of target pedestrian")
+    parser.add_argument("--view_angle", type=float, default=2.09, help="accessible angle boundary of target pedestrian")
     parser.add_argument("--social_range", type=float, default=2.0, help="socially-aware range")
-    
-    parser.add_argument("--env_range", type=float, default=10.0, help="socially-aware range")
-    parser.add_argument("--env_resol", type=float, default=0.2, help="socially-aware range")
-    parser.add_argument("--patch_size", type=int, default=16, help="socially-aware range")
-    parser.add_argument('--scene', action='store_true', help='glob expression for data files')
-    # parser.add_argument('--binary_scene', action='store_true', help='augment scenes')
-
-    ## Ablation Setting Parameters
+    parser.add_argument("--env_range", type=float, default=10.0, help="physically-aware range")
+    parser.add_argument("--env_resol", type=float, default=0.2, help="physically-aware resolution")
+    parser.add_argument("--patch_size", type=int, default=16, help="physically-aware patch size for ViT")
+    parser.add_argument('--scene', action='store_true', help='physically-aware, true, or false ')
     parser.add_argument("--hidden", type=int, default=256, help="hidden size of transformer model")
     parser.add_argument("--layer", type=int, default=4, help="number of layers")
     parser.add_argument("--head", type=int, default=4, help="number of attention heads")
-
-    parser.add_argument("--goal_hidden", type=int, default=64, help="hidden size of transformer model")
-    parser.add_argument("--goal_latent", type=int, default=32, help="hidden size of transformer model")
-    parser.add_argument('--act_fn', default='relu', help='glob expression for data files')
-
-    ## Embedding & Loss Parameters
-    parser.add_argument("--k_sample", type=int, default=20, help="embedding size")
-    parser.add_argument("--d_sample", type=int, default=1000, help="number of batch_size")
-    parser.add_argument("--seed", type=int, default=80819, help="embedding size")
+    parser.add_argument("--goal_hidden", type=int, default=64, help="goal hidden size of transformer model")
+    parser.add_argument("--goal_latent", type=int, default=32, help="goal latent hidden size of transformer model")
+    parser.add_argument("--k_sample", type=int, default=20, help="number of multimodal samples")
+    parser.add_argument("--d_sample", type=int, default=1000, help="number of goal intention samples")
+    parser.add_argument("--seed", type=int, default=80819, help="random seed")
 
     args = parser.parse_args()
     if args.dataset_name == 'ethucy':
