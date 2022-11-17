@@ -90,7 +90,7 @@ def train():
     np.random.seed(random_seed)
     random.seed(random_seed)
 
-    model_path = os.path.join(args.output_path, args.dataset_name, args.dataset_split, args.output_name)
+    model_path = os.path.join(args.output_path, args.dataset_name, args.dataset_split)
     os.makedirs(model_path, exist_ok=True)
 
     trainer = SPUBERTTrainer(train_dataloader=train_dataloader, args=args)
@@ -102,7 +102,7 @@ def train():
             aderror, fderror, gderror = trainer.test(epoch, test_dataloader, args.d_sample, args.k_sample)
             print("[TEST] ADE({:.4f}), FDE({:.4f}), GDE({:.4f})".format(aderror, fderror, gderror))
             if stopper(aderror, fderror, epoch):
-                stopper.save_model(model_path, trainer.model, model_name="full_model")
+                stopper.save_model(model_path, trainer.model, model_name=args.output_name)
 
             if stopper.early_stop and args.patience != -1:
                 break
