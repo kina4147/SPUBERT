@@ -93,14 +93,14 @@ class SPUBERTMMEmbeddings(nn.Module):
         spatial_embeddings = self.spatial_embeddings(spatial_ids)
         temporal_embeddings = self.temporal_embeddings(temporal_ids)
         segment_embeddings = self.segment_embeddings(segment_ids)
-        modal_ids = torch.zeros_like(segment_ids)
+        # modal_ids = torch.zeros_like(segment_ids)
         # modal_embeddings = self.modal_embeddings(modal_ids)
         trajectory_embeddings = spatial_embeddings + temporal_embeddings + segment_embeddings# + modal_embeddings
 
         env_spatial_embeddings = self.env_spatial_embeddings(env_spatial_ids)
         env_temporal_embeddings = self.temporal_embeddings(env_temporal_ids)
         env_segment_embeddings = self.segment_embeddings(env_segment_ids)
-        env_modal_ids = torch.ones_like(env_segment_ids)
+        # env_modal_ids = torch.ones_like(env_segment_ids)
         # env_modal_embeddings = self.modal_embeddings(env_modal_ids)
         scene_embeddings = env_spatial_embeddings + env_temporal_embeddings + env_segment_embeddings# + env_modal_embeddings
         total_embeddings = torch.cat([trajectory_embeddings, scene_embeddings], dim=1)
