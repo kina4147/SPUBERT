@@ -109,8 +109,6 @@ class SPUBERTTrainer(object):
 
         total_mgp_loss = 0
         total_tgp_loss = 0
-        total_tgp_col_loss = 0
-        total_mgp_col_loss = 0
         total_kld_loss = 0
         total_gde_loss = 0
         total_ade_loss = 0

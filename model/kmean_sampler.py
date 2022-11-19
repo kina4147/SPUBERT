@@ -94,14 +94,10 @@ class MultiKMeans:
         n_stream, batch_size, emb_dim = X.shape
         device = X.device.type
         self.centroids = X[:, np.random.choice(batch_size, size=[self.n_clusters]), :]
-
         self.num_points_in_clusters = torch.ones(self.n_kmeans, self.n_clusters, device=device)
-        # closest = None
         for i in range(self.max_iter):
             closest = self.max_sim(a=X, b=self.centroids)[1]
-            # matched_clusters, counts = closest.unique(return_counts=True)
             uniques = [closest[i].unique(return_counts=True) for i in range(self.n_kmeans)]
-            # c_grad = torch.zeros_like(self.centroids)
             expanded_closest = closest[:, None].expand(-1, self.n_clusters, -1)
             mask = (expanded_closest == torch.arange(self.n_clusters, device=device)[None, :, None]).float()
             c_grad = mask @ X / mask.sum(-1, keepdim=True)
