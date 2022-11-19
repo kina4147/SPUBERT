@@ -71,11 +71,17 @@ To test the trained SPU-BERT,
 python -m demo.test (--cuda) --dataset_name DATASET_NAME --dataset_split DATASET_SPLIT \
                       --output_name MODEL_NAME --d_sample NUM_GIS --num_nbr NUM_NEIGHBOR --scene
 ```
-All the arguments in the test should be same with the arguments of the trained model (`MODEL_NAME.pth`) in the training.
+All the arguments in the test should be the same with the arguments of the trained model (`MODEL_NAME.pth`) in the training.
 
 ## Pre-Trained Models
 We uploaded the pretrained models described in the paper: SPU-BERT (H=256, L=4, A=4, D=1000), SPU-BERT<sub>*A*</sub> (H=256, L=4, A=8, D=5000), and SPU-BERT<sub>*HA*</sub> (H=512, L=4, A=8, D=5000).
 Download the pretrained models ([output.zip](https://drive.google.com/file/d/1F80d4mEM9XXIJyaNhbBX9CSXDSDx-3Cy/view?usp=share_link)) and extract them as
+
+|Models | ETH/UCY datasets <br/> (ADE<sub>20</sub> / FDE<sub>20</sub> (m)) | SDD <br/> (ADE<sub>20</sub> / FDE<sub>20</sub> (pixels)) | Computation Time (s)
+|---- | :----: | :----: | :----: |
+|SPU-BERT | 0.31/0.22  | 0.31/0.22 | 0.1 |
+|SPU-BERT<sub>*A*</sub> | 0.31/0.22  | 0.31/0.22 | 0.1 |
+|SPU-BERT<sub>*HA*</sub> | 0.31/0.22  | 0.31/0.22 | 0.1 |
 
 
 ```bash
