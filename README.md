@@ -17,7 +17,7 @@ Additional packages are included in the `requirements.txt`.
 git clone https://github.com/kina4147/SPUBERT
 export PYTHONPATH=$PYTHONPATH:$PWD
 cd SPUBERT
-pip install -r requirements.txt
+pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu116
 ```
 
 
