@@ -3,7 +3,7 @@ import math
 import random
 import copy
 import numpy as np
-from SocialBERT.sbertplus.dataset.grid_map_numpy import RectangularGridMap
+from SPUBERT.dataset.grid_map_numpy import RectangularGridMap
 
 def rad2deg(rad):
     return rad*180/np.pi
