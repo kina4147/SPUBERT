@@ -10,7 +10,7 @@ SPU-BERT can predict socio-physically acceptable multi-trajectory by understandi
 
 
 ## Install
-The codes are developed and tested the codes in python 3.8.
+The codes are developed and tested the codes in python 3.8, PyTorch 1.13.0, and CUDA 11.6.
 Additional packages are included in the `requirements.txt`.s
 ```bash
 git clone https://github.com/kina4147/SPUBERT
