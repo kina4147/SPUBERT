@@ -23,7 +23,7 @@ def test():
     parser.add_argument('--output_name', default='test', help='output model name')
     parser.add_argument("--cuda", action='store_true', help="training with CUDA")
     parser.add_argument("--batch_size", type=int, default=32, help="batch size")
-    parser.add_argument("--num_worker", type=int, default=8, help="dataloader worker size")
+    parser.add_argument("--num_worker", type=int, default=4, help="dataloader worker size")
     parser.add_argument("--obs_len", type=int, default=8, help="number of observation frames")
     parser.add_argument("--pred_len", type=int, default=12, help="number of prediction frames")
     parser.add_argument("--num_nbr", type=int, default=4, help="number of neighbors")
