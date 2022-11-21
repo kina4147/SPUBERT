@@ -5,7 +5,7 @@ pandas==1.5.1
 PyYAML==6.0
 torch==1.13.0+cu116
 torchaudio==0.13.0+cu116
-torchvision==0.14.0+cu113
+torchvision==0.14.0+cu116
 tqdm==4.64.1
 transformers==4.17.0
 typing_extensions==4.4.0
