@@ -2,20 +2,15 @@ import torch.nn as nn
 import torch
 from transformers.activations import ACT2FN
 
+
 class TemporalEmbedding(nn.Embedding):
     def __init__(self, frame_size, embedding_dim=512, padding_idx=0):
         super().__init__(num_embeddings=frame_size+1, embedding_dim=embedding_dim, padding_idx=padding_idx)
 
 
-# Agent ID: 0 is target trajectory
 class SegmentEmbedding(nn.Embedding):
     def __init__(self, segment_size, embedding_dim=512, padding_idx=0):
         super().__init__(num_embeddings=segment_size+1, embedding_dim=embedding_dim, padding_idx=padding_idx)
-
-
-class ModalEmbedding(nn.Embedding):
-    def __init__(self, modal_size, embedding_dim=512):
-        super().__init__(num_embeddings=modal_size, embedding_dim=embedding_dim)
 
 
 class SpatialEmbedding(nn.Module):
@@ -29,8 +24,7 @@ class SpatialEmbedding(nn.Module):
         x = self.act_fn(self.linear1(x))
         return x
 
-# Map Embeddings: CGridMap / GridMap / RayCasting
-# patch or map => flatten()
+
 class GridMapEmbeddings(nn.Module):
     def __init__(self, width, height, embedding_dim=512, act_fn='relu'):
         super(GridMapEmbeddings, self).__init__()
@@ -66,6 +60,7 @@ class SPUBERTEmbeddings(nn.Module):
         embeddings = self.dropout(embeddings)
         return embeddings
 
+
 class SPUBERTMMEmbeddings(nn.Module):
     """Construct the embeddings from word, position and token_type embeddings."""
 
@@ -75,11 +70,9 @@ class SPUBERTMMEmbeddings(nn.Module):
                                                    act_fn=cfgs.act_fn)
         self.temporal_embeddings = TemporalEmbedding(frame_size=cfgs.obs_len + cfgs.pred_len,
                                                      embedding_dim=cfgs.hidden_size, padding_idx=cfgs.pad_token_id)
-        # num_map_patch: 4 / 9 / 16
         self.segment_embeddings = SegmentEmbedding(segment_size=cfgs.num_nbr + cfgs.num_patch + 1, embedding_dim=cfgs.hidden_size,
                                                    padding_idx=cfgs.pad_token_id)
 
-        # self.modal_embeddings = ModalEmbedding(modal_size=2, embedding_dim=cfgs.hidden_size)
         self.env_spatial_embeddings = GridMapEmbeddings(width=cfgs.patch_size, height=cfgs.patch_size, embedding_dim=cfgs.hidden_size, act_fn=cfgs.act_fn)
 
         self.LayerNorm = nn.LayerNorm(cfgs.hidden_size, eps=cfgs.layer_norm_eps)
@@ -93,16 +86,12 @@ class SPUBERTMMEmbeddings(nn.Module):
         spatial_embeddings = self.spatial_embeddings(spatial_ids)
         temporal_embeddings = self.temporal_embeddings(temporal_ids)
         segment_embeddings = self.segment_embeddings(segment_ids)
-        # modal_ids = torch.zeros_like(segment_ids)
-        # modal_embeddings = self.modal_embeddings(modal_ids)
-        trajectory_embeddings = spatial_embeddings + temporal_embeddings + segment_embeddings# + modal_embeddings
+        trajectory_embeddings = spatial_embeddings + temporal_embeddings + segment_embeddings
 
         env_spatial_embeddings = self.env_spatial_embeddings(env_spatial_ids)
         env_temporal_embeddings = self.temporal_embeddings(env_temporal_ids)
         env_segment_embeddings = self.segment_embeddings(env_segment_ids)
-        # env_modal_ids = torch.ones_like(env_segment_ids)
-        # env_modal_embeddings = self.modal_embeddings(env_modal_ids)
-        scene_embeddings = env_spatial_embeddings + env_temporal_embeddings + env_segment_embeddings# + env_modal_embeddings
+        scene_embeddings = env_spatial_embeddings + env_temporal_embeddings + env_segment_embeddings
         total_embeddings = torch.cat([trajectory_embeddings, scene_embeddings], dim=1)
 
         total_embeddings = self.LayerNorm(total_embeddings)
