@@ -28,6 +28,7 @@ Download datasets([data.zip](https://drive.google.com/file/d/1F80d4mEM9XXIJyaNhb
     │    └── sdd             # Stanford drone dataset
     ├── dataset              # files to load dataset: dataset.py, ethucy.py, sdd.py 
     ├── demo                 # executable files: train.py and test.py
+    ├── model                # files to model SPU-BERT
     ├── output               # trained models
     │    ├── ethucy          # directory of the trained models for ETH/UCY datasets (eth, hotel, univ, zara1, zara2)
     │    └── sdd             # directory of the trained models for SDD (default)
