@@ -110,7 +110,7 @@ python -m demo.test --cuda --dataset_name sdd \
 
 
 ## Thanks
-- Transformers used in this model comes from [HugginFace](https://huggingface.co/).
+- Transformers used in this model comes from [HuggingFace](https://huggingface.co/).
 - ETH/UCY Dataset and SDD come from [Y-Net](https://github.com/HarshayuGirase/Human-Path-Prediction).  
 
 
