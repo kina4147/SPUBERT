@@ -1,10 +1,9 @@
 import torch
-import numpy as np
+# import numpy as np
 import argparse
 import os
 import time
 import tqdm
-import random
 from torch.utils.data import DataLoader
 from SPUBERT.dataset.ethucy import ETHUCYDataset
 from SPUBERT.dataset.sdd import SDDDataset
