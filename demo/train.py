@@ -41,7 +41,6 @@ def train():
     parser.add_argument("--goal_latent", type=int, default=32, help="goal latent hidden size of transformer model")
     parser.add_argument("--k_sample", type=int, default=20, help="number of multimodal samples")
     parser.add_argument("--d_sample", type=int, default=1000, help="number of goal intention samples")
-    parser.add_argument("--seed", type=int, default=80819, help="random seed")
     parser.add_argument("--patience", type=int, default=-1, help="patience for early stopping")
     args = parser.parse_args()
 
@@ -63,15 +62,6 @@ def train():
 
     else:
         print("Dataset is not loaded.")
-
-    random_seed = args.seed
-    torch.manual_seed(random_seed)
-    torch.cuda.manual_seed(random_seed)
-    torch.cuda.manual_seed_all(random_seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-    np.random.seed(random_seed)
-    random.seed(random_seed)
 
     model_path = os.path.join(args.output_path, args.dataset_name, args.dataset_split)
     os.makedirs(model_path, exist_ok=True)
