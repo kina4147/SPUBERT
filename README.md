@@ -56,7 +56,7 @@ Download datasets([data.zip](https://drive.google.com/file/d/1F80d4mEM9XXIJyaNhb
 ## Training
 To train SPU-BERT, 
 ```bash
-python -m demo.train  (--cuda) --dataset_name DATASET_NAME --dataset_split DATASET_SPLIT \
+python -m demo.train  --cuda --dataset_name DATASET_NAME --dataset_split DATASET_SPLIT \
                        --output_name MODEL_NAME --d_sample NUM_GIS --num_nbr NUM_NEIGHBOR --scene 
 ```
 For ETH/UCY dataset, `DATASET_SPLIT` can be `eth`, `hotel`, `univ`, `zara1`, `zara2`. 
@@ -67,52 +67,45 @@ The trained model is save in `SPUBERT/output/DATASET_NAME/DATASET_SPLIT/MODEL_NA
 ## Evaluation
 To test the trained SPU-BERT,
 ```bash
-python -m demo.test (--cuda) --dataset_name DATASET_NAME --dataset_split DATASET_SPLIT \
+python -m demo.test --cuda --dataset_name DATASET_NAME --dataset_split DATASET_SPLIT \
                       --output_name MODEL_NAME --d_sample NUM_GIS --num_nbr NUM_NEIGHBOR --scene
 ```
 All the arguments in the test should be the same with the arguments of the trained model (`MODEL_NAME.pth`) in the training.
 
 ## Pre-Trained Models
-We uploaded the pretrained models described in the paper: SPU-BERT (H=256, L=4, A=4, D=1000), SPU-BERT<sub>*A*</sub> (H=256, L=4, A=8, D=5000), and SPU-BERT<sub>*HA*</sub> (H=512, L=4, A=8, D=5000).
+We uploaded the pretrained models described in the paper: SPU-BERT (H=256, L=4, A=4, D=1000), and SPU-BERT<sub>*L*</sub> (H=512, L=4, A=8, D=5000).
 
 |Models | ETH/UCY datasets <br/> (ADE<sub>20</sub> / FDE<sub>20</sub> (m)) | SDD <br/> (ADE<sub>20</sub> / FDE<sub>20</sub> (pixels)) | Computation Time (s)
 |---- | :----: | :----: | :----: |
-|SPU-BERT | 0.31/0.22  | 0.31/0.22 | 0.1 |
-|SPU-BERT<sub>*A*</sub> | 0.31/0.22  | 0.31/0.22 | 0.1 |
-|SPU-BERT<sub>*HA*</sub> | 0.31/0.22  | 0.31/0.22 | 0.1 |
+|SPU-BERT | 0.19/0.31  | 7.54/12.57 | 0.132 |
+|SPU-BERT<sub>*L*</sub> | 0.19/0.31  | 7.38/12.32 | 0.214 |
 
-Download the pretrained models ([output.zip](https://drive.google.com/file/d/1F80d4mEM9XXIJyaNhbBX9CSXDSDx-3Cy/view?usp=share_link)) and extract them as
+Download the pretrained models ([output.zip](https://drive.google.com/file/d/1DMqKkyDyLS4_EeA4yGDMTkm_bsw70gFt/view?usp=share_link)) and extract them as
 
 
 ```bash
     └── output               
          ├── ethucy 
-         │    ├── eth ── spubert.pth / spubert_a.pth / spubert_ha.pth
-         │    ├── hotel ── spubert.pth / spubert_a.pth / spubert_ha.pth
-         │    ├── univ ── spubert.pth / spubert_a.pth / spubert_ha.pth
-         │    ├── zara1 ── spubert.pth / spubert_a.pth / spubert_ha.pth
-         │    └── zara2 ── spubert.pth / spubert_a.pth / spubert_ha.pth
+         │    ├── eth ── spubert.pth / spubert_l.pth
+         │    ├── hotel ── spubert.pth / spubert_l.pth
+         │    ├── univ ── spubert.pth / spubert_l.pth
+         │    ├── zara1 ── spubert.pth / spubert_l.pth
+         │    └── zara2 ── spubert.pth / spubert_l.pth
          └── sdd   
-              └── default ── spubert.pth / spubert_a.pth / spubert_ha.pth        
+              └── default ── spubert.pth / spubert_l.pth        
     
 ```  
 To test SPU-BERT on the ETH-Hotel of ETH/UCY datasets, 
 ```bash
-python -m demo.test (--cuda) --dataset_name ethucy --dataset_split hotel \
+python -m demo.test --cuda --dataset_name ethucy --dataset_split hotel \
                      --hidden 256 --layer 4 --head 4 \
                      --d_sample 1000  --num_nbr 4 --scene --output_name spubert
 ```
-To test SPU-BERT<sub>*A*</sub> on the UCY-Zara1 of ETH/UCY datasets, 
+To test SPU-BERT<sub>*L*</sub> on the SDD, 
 ```bash
-python -m demo.test (--cuda) --dataset_name ethucy --dataset_split zara1 \
-                     --hidden 256 --layer 4 --head 8 \
-                     --d_sample 5000  --num_nbr 4 --scene --output_name spubert_a
-```
-To test SPU-BERT<sub>*HA*</sub> on the SDD, 
-```bash
-python -m demo.test (--cuda) --dataset_name sdd \
+python -m demo.test --cuda --dataset_name sdd \
                      --hidden 512 --layer 4 --head 8 \
-                     --d_sample 5000  --num_nbr 4 --scene --output_name spubert_ha
+                     --d_sample 5000  --num_nbr 4 --scene --output_name spubert_l
 ```
 
 
@@ -128,7 +121,6 @@ If you find this work useful, it would be grateful to cite our paper!
 @article{na2022knowledge,
   title={SPU-BERT: Faster Human Multi-Trajectory Prediction from Socio-Physical Understanding of BERT},
   author={Ki-In Na, Ue-Hwan Kim, and Jong-Hwan Kim},
-  journal={Knowledge Based Systems (submitted)},
   year={2022}
 }
 ```
