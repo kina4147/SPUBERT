@@ -118,7 +118,7 @@ python -m demo.test --cuda --dataset_name sdd \
 If you find this work useful, it would be grateful to cite our paper!
 
 ```bib
-@article{na2022knowledge,
+@article{na2022spubert,
   title={SPU-BERT: Faster Human Multi-Trajectory Prediction from Socio-Physical Understanding of BERT},
   author={Ki-In Na, Ue-Hwan Kim, and Jong-Hwan Kim},
   year={2022}
