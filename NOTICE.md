@@ -15,7 +15,14 @@ In compliance with the obligation to adhere to the Apache 2.0 license, we hereby
 
 
 * The following pertains to copyrights, patents, trademarks, and attribution of the software provided:
-
+  - **model/modeling_spubert.py**: 
+    - Copyright (c) 2023 Electronics and Telecommunications Research Institute (ETRI)
+    - Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
+    - Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
+  - **model/spubert.py**: 
+    - Copyright (c) 2023 Electronics and Telecommunications Research Institute (ETRI)
+    - Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
+    - Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
 * Contact
   - Name: Ki-In Na
   - Affiliation: Field Robotics Research Section, Electronics and Telecommunications Research Institute (ETRI) 
