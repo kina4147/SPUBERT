@@ -126,6 +126,6 @@ If you find this work useful, it would be grateful to cite our paper!
 }
 ```
 
-## Contact us
+## Contact
+If you want to use and/or redistribute this source commercially, please consult Ki-In Na(kina4147@etri.re.kr) for details in advance.
 
-Ki-In Na ([@kina4147](https://github.com/kina4147)): kina4147@gmail.com  
