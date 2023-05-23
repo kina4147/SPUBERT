@@ -25,7 +25,7 @@ In compliance with the obligation to adhere to the Apache 2.0 license, we hereby
     - Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
 
 
-* Contact
+* Contact information
   - Name: Ki-In Na
   - Affiliation: Field Robotics Research Section, Electronics and Telecommunications Research Institute (ETRI) 
   - E-mail: kina4147@etri.re.kr
