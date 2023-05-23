@@ -14,7 +14,7 @@ In compliance with the obligation to adhere to the Apache 2.0 license, we hereby
   - **model/spubert.py**: We modified "configuration_bert.py" and "modeling_bert.py" in "transformers/src/transformers/models/bert" of huggingface. Specifically, we added configuration parameters related to the trajectory prediction, and separated configuration classes for TGP and MGP modules. We modified the inputs, outputs, network architecture, losses, etc. of the main modules in "modeling_bert.py" of the huggingface to handle multi-pedestrian trajectory and semantic map. In addition, we newly made SPUBERT by connecting two BERT models and adding CVAE in between.
 
 
-* The following pertains to copyrights, patents, trademarks, and attribution of the software provided:
+* The followings pertain to copyrights, patents, trademarks, and attribution of the software provided:
   - **model/modeling_spubert.py**: 
     - Copyright (c) 2023 Electronics and Telecommunications Research Institute (ETRI)
     - Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
@@ -23,6 +23,8 @@ In compliance with the obligation to adhere to the Apache 2.0 license, we hereby
     - Copyright (c) 2023 Electronics and Telecommunications Research Institute (ETRI)
     - Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
     - Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
+
+
 * Contact
   - Name: Ki-In Na
   - Affiliation: Field Robotics Research Section, Electronics and Telecommunications Research Institute (ETRI) 
