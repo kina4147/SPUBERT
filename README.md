@@ -122,7 +122,10 @@ If you find this work useful, it would be grateful to cite our paper!
 @article{na2022spubert,
   title={SPU-BERT: Faster Human Multi-Trajectory Prediction from Socio-Physical Understanding of BERT},
   author={Ki-In Na, Ue-Hwan Kim, and Jong-Hwan Kim},
-  year={2022}
+  journal = {Knowledge-Based Systems},
+  volume = {274},
+  pages = {110637},
+  year={2023}
 }
 ```
 
