@@ -79,6 +79,7 @@ def test():
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     model.to(device)
     diff_time = 0
+    print(sum(p.numel() for p in model.parameters() if p.requires_grad))
     with torch.no_grad():
         model.eval()
         total_aderror = 0

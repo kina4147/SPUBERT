@@ -21,7 +21,7 @@ pip install -r requirements.txt --extra-index-url https://download.pytorch.org/w
 
 
 ### Dataset
-Download datasets([data.zip](https://drive.google.com/file/d/1F80d4mEM9XXIJyaNhbBX9CSXDSDx-3Cy/view?usp=share_link)) including ETH/UCY dataset and Stanford drone dataset.
+Download datasets([data.zip](https://drive.google.com/file/d/1unNc9aCzwhi6H6FQycHrgolTFIhHxv9Y/view?usp=sharing)) including ETH/UCY dataset and Stanford drone dataset.
 ```bash
     ├── data                 # Datasets
     │    ├── ethucy          # ETH/UCY dataset
